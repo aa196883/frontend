@@ -312,7 +312,7 @@ app.get('/getCollectionByAuthor', async (req, res) => {
  * @constant /search
  * @todo this seems to be a duplicate of /searchInterface
  */
-app.get('/search', async function (req, res) {
+app.get('/search', async function (req, res) { //TODO: remove this endpoint as it is not used?
     const searchTerm = req.query.query;
     let results = [];
     let authors = [];
@@ -345,7 +345,7 @@ app.get('/search', async function (req, res) {
  *
  * @constant /crisp-query-results
  */
-app.post('/crisp-query-results', (req, res) => {
+app.post('/crisp-query-results', (req, res) => { //TODO: remove this endpoint, call the backend instead when needed, or even better: make new endpoints on the backend (to get)
     const query = req.body.query;
 
     if (queryEditsDB(query)) {
@@ -536,7 +536,7 @@ app.post('/fuzzy-query-results', async (req, res) => {
         }
 
         // Format result like original logic
-        return res.json({ results: data.result || '[]' });
+        return res.json({ results: data.results || '[]' });
 
     } catch (err) {
         console.error(`/fuzzy-query-results: error`, err);
@@ -549,7 +549,7 @@ app.post('/fuzzy-query-results', async (req, res) => {
  *
  * Data to post : the audio file.
  *
- * Returns the notes, in the following form: `{'notes': string}` TODO: is this correct?
+ * Returns the notes, in the following form: `{'notes': string}`
  *
  * POST
  *
