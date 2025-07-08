@@ -123,7 +123,7 @@ watch(
       LoadPageN();
     } else {
       pageNb.value = 1; // reset to first page
-      // LoadPageN() don't need because it will be called by the watcher of pageNb
+      // LoadPageN() not needed because it will be called by the watcher of pageNb
     }
   }
 );

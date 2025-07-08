@@ -1,6 +1,8 @@
 # TODO
 - update change log
 - remove useless annotation in preview
+- remove cipher query from client side in fetchCollectionScoresNamesByAuthor -> make an endpoint in frontend that call backend
+- remove ping pong -> only one endpoint for searchInterface (not 2)
 
 ## Bugs
 - accidental not considered on search (nor in data ingestion);
