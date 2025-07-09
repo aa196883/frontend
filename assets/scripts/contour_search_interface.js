@@ -1,5 +1,5 @@
 import { loadPageN } from './paginated_results.js';
-import { unifyResults, extractMelodyFromQuery } from './preview_scores.js';
+import { extractMelodyFromQuery } from './preview_scores.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const searchButton = document.getElementById("stricte");
@@ -55,7 +55,7 @@ function sendQuery(fuzzyQuery) {
             const patternDiv = document.getElementById('pattern');
 
             if ('results' in data) {
-                dataDiv.textContent = JSON.stringify(unifyResults({ results: JSON.parse(data.results) }));
+                dataDiv.textContent = data.results;
                 patternDiv.textContent = extractMelodyFromQuery(fuzzyQuery);
                 loadPageN(1, null, true, true, true);
             } else {

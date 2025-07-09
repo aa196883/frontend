@@ -5,7 +5,7 @@
 
 //========= Imports =========//
 import { loadPageN } from './paginated_results.js';
-import { unifyResults, extractMelodyFromQuery } from './preview_scores.js';
+import { extractMelodyFromQuery } from './preview_scores.js';
 import { StaveRepresentation, Player } from './stave.js';
 
 // micro_recorder_wav.js
@@ -203,8 +203,7 @@ function sendQuery(fuzzyQuery) {
 
             if ('results' in data) {
                 try {
-                    const parsedResults = JSON.parse(data.results);
-                    dataDiv.textContent = JSON.stringify(unifyResults({ results: parsedResults }));
+                    dataDiv.textContent = data.results;
                     patternDiv.textContent = extractMelodyFromQuery(fuzzyQuery);
                     loadPageN(1, null, true, true, true);
                 } catch (e) {

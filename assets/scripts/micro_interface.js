@@ -1,6 +1,6 @@
 //============= Imports =============//
 import { loadPageN } from './paginated_results.js';
-import { unifyResults, extractMelodyFromQuery } from './preview_scores.js';
+import { extractMelodyFromQuery } from './preview_scores.js';
 import { StaveRepresentation, Player } from './stave.js';
 import { startRecording, staveRepr, player } from './micro_recorder_wav.js';
 
