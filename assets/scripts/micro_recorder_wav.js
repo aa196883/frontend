@@ -290,16 +290,10 @@ function stopRecording() {
                 let dots = n[2];
 
                 let pitch_0, pitch_arr;
-                if (Array.isArray(pitch)) { // This is a chord
-                    pitch_0 = pitch[0];
-                    pitch_arr = pitch;
-                }
-                else {
-                    pitch_0 = pitch;
-                    pitch_arr = [pitch];
-                }
+                pitch_0 = pitch[0];
+                pitch_arr = pitch;
 
-                if (dots == 1) {
+                if (dots >= 1) { // Ignore more dots
                     dur += 'd';
                 }
 
