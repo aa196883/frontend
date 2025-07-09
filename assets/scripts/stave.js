@@ -256,6 +256,8 @@ class Player {
         if (note == 'r')
             return;
 
+        note = note.toUpperCase();
+
         if (audio == null) {
             this.#currently_played_notes_playback[note] = {audio: new Audio()};
             audio = this.#currently_played_notes_playback[note].audio;
@@ -290,6 +292,8 @@ class Player {
     stopTune(note, audio=null) {
         if (note == 'r')
             return;
+
+        note = note.toUpperCase();
 
         let note_arr = note.replace('/', '');
 
