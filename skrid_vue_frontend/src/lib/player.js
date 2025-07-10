@@ -1,4 +1,4 @@
-import { durationNote } from "../constants";
+import { durationNoteWithDots } from "../constants";
 import { ref } from "vue";
 /**
  * Class defining methods to play music from the vexflow stave
@@ -131,7 +131,7 @@ class Player {
 
         let class_inst = this;
         var stopAudio = setInterval(function () {
-            if (audio.currentTime >= 2 * durationNote[rhythm]) {
+            if (audio.currentTime >= 2 * durationNoteWithDots[rhythm]) {
                 clearInterval(stopAudio);
                 class_inst.stopTune(note, audio);
             }
@@ -168,7 +168,7 @@ class Player {
                 else
                     melody[k].keys.forEach((key) => { this.playNoteWithRhythm(key.replace('/', ''), duration) }); // Play chord (or just one note)
 
-                await this.#sleep(1000 * durationNote[duration]);
+                await this.#sleep(1000 * durationNoteWithDots[duration]);
             }
             else {
                 this.#stop_melody = false;

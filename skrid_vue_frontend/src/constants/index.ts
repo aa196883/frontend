@@ -1,5 +1,14 @@
 /** All the possible durations for a note */
-export const durationNote: Record<string, number>= {
+export const durationNote: Record<string, number> = {
+    '32': 1 / 32,         // thirty-second (triple croche)
+    '16': 1 / 16,         // sixteenth (double croche)
+    '8': 1 / 8,           // eighth (croche)
+    'q': 1 / 4,           // (quarter)
+    'h': 1 / 2,           // (half)
+    'w': 1              // (whole)
+};
+
+export const durationNoteWithDots: Record<string, number> = {
     '32': 1 / 32,         // thirty-second (triple croche)
     '32d': 1 / 32 + 1 / 64, // dotted thirty-second (triple croche pointée)
     '16': 1 / 16,         // sixteenth (double croche)
