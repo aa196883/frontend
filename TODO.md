@@ -1,7 +1,11 @@
 # TODO
+
+## General
 - update change log
 - remove useless annotation in preview
 - remove ping pong -> only one endpoint for searchInterface (not 2)
+
+- Move config folder to the main repository
 
 ## Bugs
 - accidental not considered on search (nor in data ingestion);
