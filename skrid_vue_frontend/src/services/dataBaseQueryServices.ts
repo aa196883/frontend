@@ -25,7 +25,7 @@ export async function fetchAuthors() {
 export async function fetchCollectionScoresNamesByAuthor(author: string) {
     try {
         const response = await api.get(`/collection/${author}`);
-        return response.data.results;
+        return response.data;
     } catch (error) {
         console.error("Error fetching collection data of collection" + author + " :", error);
         throw error;
@@ -38,11 +38,11 @@ export async function fetchCollectionScoresNamesByAuthor(author: string) {
  * @param {string} authorName - The name of the author of the MEI file.
  * @returns {Promise<Object>} A promise that resolves to the MEI file data.
  * */
-export async function fetchMeiFileByFileName(fileName: string, authorName: string){
+export async function fetchMeiFileByFileName(fileName: string, authorName: string) {
     let author = authorName.replace(/ /g, '-');
     try {
         const response = await api.get(`/data/${author}/mei/${fileName}`);
-        return response.data
+        return response.data;
     } catch (error) {
         console.error("Error fetching MEI file by name:", fileName, "for author:", authorName);
         throw error;
@@ -55,7 +55,7 @@ export async function fetchMeiFileByFileName(fileName: string, authorName: strin
  * @param {SearchParams} data - The data to be sent in the request body.
  * @returns {Promise<Object>} A promise that resolves to the query results.
  */
-export async function fetchSearchResults(searchParams: SearchParams){
+export async function fetchSearchResults(searchParams: SearchParams) {
     try {
         const response = await api.post("/search-results", searchParams);
         return response.data.results;
