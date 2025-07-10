@@ -240,7 +240,7 @@
 <script setup>
 import Player from '@/lib/player.js';
 import StaveRepresentation from '@/lib/stave.js';
-import { durationNote, mapping_azerty, qwerty_us_to_azerty } from '@/constants/index.js';
+import { durationNote, mapping_azerty, qwerty_us_to_azerty } from '@/constants/index.ts';
 import { onMounted, ref, watch } from 'vue';
 
 defineOptions({

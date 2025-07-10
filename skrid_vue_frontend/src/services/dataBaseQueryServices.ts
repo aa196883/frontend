@@ -1,3 +1,4 @@
+import type { SearchParams } from "@/types/searchParam.ts";
 import api from "./axios.ts";
 
 /**
@@ -55,35 +56,15 @@ export async function fetchMeiFileByFileName(fileName: string, authorName: strin
 /**
  * Fetches fuzzy query based on the provided data.
  * 
- * @param {Object} data - The data to be sent in the request body.
+ * @param {SearchParams} data - The data to be sent in the request body.
  * @returns {Promise<Object>} A promise that resolves to the query results.
  */
-export async function fecthFuzzyQuery(data: any){
+export async function fetchSearchResults(searchParams: SearchParams){
     try {
-        const response = await api.post("/fuzzy-query-results", data);
-        return response.data.query;
+        const response = await api.post("/search-result", searchParams);
+        return response.data;
     } catch (error) {
-        console.error("Error fetching fuzzy query results:", error);
-        throw error;
-    }
-}
-
-/**
- * Fetches fuzzy query results based on the provided fuzzy query.
- * 
- * @param {String} fuzzyQuery - The fuzzy query to be sent in the request body.
- * @returns {Promise<Object>} A promise that resolves to the results of the fuzzy query.
- */
-export async function fecthFuzzyQueryResults(fuzzyQuery: String){
-    let data = {
-        "query": fuzzyQuery,
-        "format": "json"
-    };
-    try {
-        const response = await api.post("/fuzzy-query-results", data);
-        return response.data.results;
-    } catch (error) {
-        console.error("Error fetching fuzzy query results:", error);
+        console.error("Error fetching search-result", error);
         throw error;
     }
 }
