@@ -450,7 +450,7 @@ app.post('/search-results', async (req, res) => {
             return res.status(response.status).json({ error: data.error || 'Flask returned an error' });
         }
 
-        return res.json(data);  // Forward response to browser
+        return res.json({results: JSON.parse(data.results)});  // Forward response to browser
 
     } catch (error) {
         console.error('/search-results failed:', error);
