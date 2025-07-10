@@ -8,7 +8,7 @@ import api from "./axios.ts";
 */
 export async function fetchAuthors() {
     try {
-        const response = await api.get("/authors");
+        const response = await api.get("/collections-names");
         return response.data;
     } catch (error) {
         console.error("Error fetching authors:", error);
@@ -23,12 +23,8 @@ export async function fetchAuthors() {
  * @returns {Promise<Object>} A promise that resolves to the collection data for the specified author.
  */
 export async function fetchCollectionScoresNamesByAuthor(author: string) {
-    const query = `MATCH (s:Score) WHERE s.collection CONTAINS "${author}" RETURN s ORDER BY s.source`;
-    let data = {
-        "query": query,
-    };
     try {
-        const response = await api.post("/crisp-query-results", data);
+        const response = await api.post(`/collection/${author}`, data);
         return response.data.results;
     } catch (error) {
         console.error("Error fetching collection data of collection" + author + " :", error);

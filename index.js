@@ -34,9 +34,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-//setting view engine to ejs
-app.set("view engine", "ejs");
-
 app.use(cors()); // Use CORS for development of vuejs frontend
 
 //============================= Public folders =============================//
@@ -47,8 +44,9 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use('/data', express.static(path.join(__dirname, 'data')));
 
 app.use(express.static(path.join(__dirname, 'assets/public/'))); // Everything in this folder will be available through the web
+
 // Rendre le préfixe disponible dans tous les templates EJS
-app.use((req, res, next) => {
+app.use((req, res, next) => { //TODO: is this still needed with vueJS?
     res.locals.BASE_PATH = BASE_PATH;
     next();
 });
@@ -65,71 +63,6 @@ function log(level, msg) {
     console.log(`${(new Date().toUTCString())} - ${level}: ${msg}`);
 }
 
-/**
- * Check if the query contain some keywords that modify the database.
- *
- * @param {string} query - the cypher query
- * @returns {boolean} true if query would modify the database, false otherwise.
- */
-function queryEditsDB(query) {
-    let keywords = ['create', 'delete', 'set', 'remove', 'detach', 'load'];
-    let queryLower = query.toLowerCase();
-
-    for (let k = 0; k < keywords.length; ++k) {
-        if (queryLower.includes(keywords[k])) {
-            log('info', `query contains "${keywords[k].toUpperCase()}" keyword. Aborting it.`);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * Logs the error and return a string corresponding to the problem (string that will be shown to the client).
- *
- * @param {string} caller - the caller name (e.g '/search-results'). Used for logs ;
- * @param {*} data - the error data.
- */
-function handlePythonStdErr(caller, data) {
-    let errorString = data.toString();
-
-    if (!(errorString.includes('site-packages/pydub/utils.py:') && errorString.includes(' SyntaxWarning: invalid escape sequence'))) {
-        log('error', `${caller}: received data on stderr from python script: "${data}"`);
-
-        // Database not turned on
-        if (errorString.includes('neo4j.exceptions.ServiceUnavailable: Unable to retrieve routing information'))
-            return 'Not connected to the database !\nPlease contact the administrator.';
-
-        if (errorString.includes('neo4j.exceptions.AuthError') && errorString.includes('Neo.ClientError.Security.Unauthorized'))
-            return 'Wrong database password !\nPlease contact the administrator.';
-
-        return errorString;
-    }
-}
-
-async function queryDB(query) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/execute-crisp-query`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query })
-        });
-
-        const data = await response.json();
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        return data.results;
-    } catch (err) {
-        console.error('[queryDB] Error:', err.message);
-        throw err;
-    }
-}
-
-//============================= Images =============================//
-app.use(express.static('assets/public/')); // Everything in this folder will be available through the web
-
 //============================= Pages (get) =============================//
 
 app.get('/scripts/config.js', (req, res) => {
@@ -138,185 +71,6 @@ app.get('/scripts/config.js', (req, res) => {
         const BASE_PATH = '${BASE_PATH}';
         const API_BASE_URL = '${API_BASE_URL}';
     `);
-});
-
-app.get("/", function (req, res) {
-    res.render("home");
-});
-
-/**
- * Route for the plus page.
- *
- * GET
- *
- * @constant /plus
- */
-app.get("/plus", function (req, res) {
-    res.render("plus");
-});
-
-/**
- * Route for the references page.
- *
- * GET
- *
- * @constant /references
- */
-app.get("/references", function (req, res) {
-    res.render("references");
-});
-
-
-/**
- * Route for the research page with the piano interface.
- *
- * GET
- *
- * @constant /searchInterface
- */
-app.get('/searchInterface', async function (req, res) {
-    let authors = [];
-
-    try {
-        // The query to get the authors is necessary to display the list of possible collections
-        const authorQuery = "MATCH (s:Score) RETURN DISTINCT s.collection";
-        const results = await queryDB(authorQuery);
-        authors = results.map(record => record['s.collection']);
-    } catch (err) {
-        log('error', `/searchInterface: ${err}`)
-    }
-
-    res.render("search_interface", {
-        authors: authors
-    });
-});
-
-/**
- * Route for the contour search page.
- *
- * GET
- *
- * @constant /contourSearchInterface
- */
-app.get('/contourSearchInterface', async function (req, res) {
-    let authors = [];
-
-    try {
-        // The query to get the authors is necessary to display the list of possible collections
-        const authorQuery = "MATCH (s:Score) RETURN DISTINCT s.collection";
-        const results = await queryDB(authorQuery);
-        authors = results.map(record => record['s.collection']);
-    } catch (err) {
-        log('error', `/contourSearchInterface: ${err}`)
-    }
-
-    res.render("contour_search_interface", {
-        authors: authors
-    });
-});
-
-/**
- * Route for the research page with the microphone interface.
- *
- * GET
- *
- * @constant /fuzzy-query-from-microphone
- */
-app.get('/fuzzy-query-from-microphone', async function (req, res) {
-    let authors = [];
-
-    try {
-        // The query to get the authors is necessary to display the list of possible collections
-        const authorQuery = "MATCH (s:Score) RETURN DISTINCT s.collection";
-        const authorResponse = await queryDB(authorQuery);
-        authors = authorResponse.map(record => record['s.collection']);
-    } catch(err) {
-        log('error', `/fuzzy-query-from-microphone: ${err}`)
-    }
-
-    res.render("formulateQueryFromMicrophone", {
-        authors: authors
-    });
-});
-
-/**
- * Route for help page
- * 
- * GET
- *
- * @constant /help
- */
-app.get("/help", function (req, res) {
-    res.render("help");
-});
-
-/**
- * This endpoint will redirect the user to the 'collections' page .
- * Before redirecting, it queries the database in order to get the list of collections.
- *
- * GET
- *
- * @constant /collections
- */
-app.get('/collections', async function (req, res) {
-    let authors = [];
-
-    try {
-        const results = await queryDB("MATCH (s:Score) RETURN DISTINCT s.collection");
-        authors = results.map(record => record['s.collection']);
-    } catch (err) {
-        log('error', `/collections: ${err.message}`);
-    }
-
-    res.render("collections", {
-        authors: authors,
-    });
-});
-
-/**
- * Route for the result page.
- *
- * GET
- *
- * @constant /result
- */
-app.get('/result', (req, res) => {
-    res.render("result");
-});
-
-/**
- * This endpoint will search for all the scores containing in the title the string inserted by the user in the search bar.
- *
- * Note: not currently used (seems that it was used with a text search bar at the top of the piano interface page).
- *
- * GET
- *
- * @constant /search
- * @todo this seems to be a duplicate of /searchInterface
- */
-app.get('/search', async function (req, res) { //TODO: remove this endpoint as it is not used?
-    const searchTerm = req.query.query;
-    let results = [];
-    let authors = [];
-
-    try {
-        const resultQuery = "MATCH (s:Score) WHERE s.source CONTAINS $query RETURN s ORDER BY s.source DESC";
-        const resultParams = { query: searchTerm };
-        const resultResponse = await queryDB(resultQuery, resultParams);
-        results = resultResponse;
-
-        const authorQuery = "MATCH (s:Score) RETURN DISTINCT s.collection";
-        const authorResponse = await queryDB(authorQuery);
-        authors = authorResponse.map(record => record.collection);
-
-    } catch (err) {
-        log('error', `/search: ${err.message}`);
-    }
-
-    res.render("search_interface", {
-        results: results,
-        authors: authors,
-    });
 });
 
 //============================= Endpoints (get) =============================//
@@ -330,9 +84,7 @@ app.get('/search', async function (req, res) { //TODO: remove this endpoint as i
 app.get('/collections-names', async function (req, res) {
     log('info', `/collections-names: Fetching authors from the database ...`);
 
-    fetch(`${API_BASE_URL}/collections-names`, {
-        method: 'GET',
-    })
+    fetch(`${API_BASE_URL}/collections-names`, { method: 'GET' })
         .then(response => response.json())
         .then(data => {
             if (data.error)
@@ -346,44 +98,43 @@ app.get('/collections-names', async function (req, res) {
         });
 });
 
-
-//============================= Endpoints (post) =============================//
 /**
- * This endpoint sends the query to the database (if it does not modify the database) and send the result back to the client.
+ * This endpoint returns the sources (MEI file names) of the scores contained in the given collection.
  *
- * POST
+ * URL data:
+ *  - collection_name: the name of the collection.
  *
- * @constant /crisp-query-results
+ * GET
+ *
+ * @constant /collection
  */
-app.post('/crisp-query-results', (req, res) => { //TODO: remove this endpoint, call the backend instead when needed, or even better: make new endpoints on the backend (to get)
-    const query = req.body.query;
+app.get('/collection/:collection_name', async function (req, res) {
+    let collection_name = req.params.collection_name;
 
-    if (queryEditsDB(query)) {
-        return res.json({ error: 'Operation not allowed.' });
-    }
+    log('info', `/collection: Fetching file names for collection "${collection_name}" ...`);
 
-    log('info', `/crisp-query-results: forwarding query to Flask backend`);
+    fetch(`${API_BASE_URL}/collection/${collection_name}`, { method: 'GET' })
+        .then(response => {
+            if (!response.ok) {
+                return res.status(response.status).json({ error: data.error || 'Flask returned an error' });
+            }
 
-    fetch(`${API_BASE_URL}/execute-crisp-query`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            query: query
+            return response.json();
         })
-    })
-        .then(response => response.json())
         .then(data => {
             if (data.error)
                 return res.json({ error: data.error });
 
-            return res.json({ results: data.results });
+            return res.json(data);
         })
         .catch(error => {
-            log('error', `/crisp-query-results: ${error.message}`);
+            log('error', `/collection: ${error.message}`);
             return res.json({ error: error.message });
         });
 });
 
+
+//============================= Endpoints (post) =============================//
 /**
  * This endpoint receives the melody and search parameters and returns the associated (processed) results.
  *
