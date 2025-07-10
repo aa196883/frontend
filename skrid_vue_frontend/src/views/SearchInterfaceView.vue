@@ -3,9 +3,9 @@
     <div class="search-pattern">
       <stave></stave>
       <keyboard></keyboard>
-      <search-param @receiveData="getData"></search-param>
+      <search-param @receiveData="getData" @showPaginatedResult="showPaginatedResults()"></search-param>
     </div>
-    <paginated-results :data="searchResults" v-if="searchResults"/>
+    <paginated-results :loading="loadingResults" :data="searchResults" v-if="paginatedIsShown"/>
   </div>
 </template>
 
@@ -20,12 +20,21 @@ defineOptions({
   name: 'SearchInterfaceView',
 });
 
+const paginatedIsShown = ref(false);
 const searchResults = ref(null);
+const resultsIsLoading = ref(false);
+
+function showPaginatedResults() {
+  // This function is called when the SearchParam component emits the showPaginatedResult event
+  paginatedIsShown.value = true;
+  resultsIsLoading.value = true; // Set loading state to true while results are being fetched
+}
 
 function getData(data) {
   // This function receives the data from SearchParam component
   // and updates the searchResults ref to trigger reactivity
   searchResults.value = data;
+  resultsIsLoading.value = false; // Set loading state to false after data is received
 }
 
 </script>

@@ -16,16 +16,6 @@ export function getPageN(data: any[], pageNb: number, numberPerPage: number) {
 }
 
 /**
- * return true if the data is metadata of a collection ie the list of all filename of the collection (used in collectionView.vue),
- * false otherwise ie the data is the result of a query on the database (with match notes etc. used in searchInterface.vue)
- * @param data fetched from the database
- * @returns {boolean}
- */
-export function isCollectionData(data: Array<any>): boolean {
-    return data[0].hasOwnProperty('global_degree') && data[0].hasOwnProperty('notes');
-}
-
-/**
  * Return the color to use.
  *
  * Internally it uses three colours.

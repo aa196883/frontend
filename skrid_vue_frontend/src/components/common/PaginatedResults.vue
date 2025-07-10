@@ -1,6 +1,6 @@
 <template>
   <div class="paginated-results">
-    <div class="navigation" v-if="true">
+    <div class="navigation">
       <button id="csv-button" class="pagination-bt">Télécharger les résultats en CSV</button>
 
       <label id="score_nb_lb">Nombre de partitions : {{ nbScores }} </label>
@@ -21,7 +21,7 @@
     </div>
 
     <div class="results-container" id="results-container">
-      <h3 v-if="!props.data" class="text-center">Chargement</h3>
+      <h3 v-if="props.loading" class="text-center">Chargement</h3>
       <h3 v-else-if="props.data.length == 0" class="text-center">Aucun résultat</h3>
       <a
         v-else
@@ -54,7 +54,7 @@
 <script setup>
 import { useAuthorsStore } from '@/stores/authorsStore';
 import { useVerovioStore } from '@/stores/verovioStore';
-import { getPageN, isCollectionData } from '@/services/dataManagerServices';
+import { getPageN } from '@/services/dataManagerServices';
 import { fetchMeiFileByFileName } from '@/services/dataBaseQueryServices';
 import { computed, ref, watch } from 'vue';
 
@@ -67,13 +67,16 @@ const props = defineProps({
     type: [Array, null],
     required: true,
   },
+  loading: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const verovio = useVerovioStore();
 const authors = useAuthorsStore();
 const paginatedScores = ref([]);
 let nbScores = computed(() => {
-  if (!props.data) return 0; // If no data, no scores
   return props.data.length;
 });
 let pageNb = ref(0);
@@ -135,58 +138,55 @@ function LoadPageN() {
   // slice the data from the page requested
   let dataSlice = getPageN(props.data, pageNb.value, nbPerPage.value);
 
-  if (isCollectionData(props.data)) {
-    dataSlice.forEach((item) => {
-      let fileName = item.s.source;
-      fetchMeiFileByFileName(fileName, authors.selectedAuthorName).then((meiXML) => {
-        // extract title
-        let title;
+  console.log('dataSlice', dataSlice);
+  dataSlice.forEach((item) => {
+    let fileName = item.source;
+    console.log('fileName', fileName);
+    fetchMeiFileByFileName(fileName, authors.selectedAuthorName).then((meiXML) => {
+      // extract title
+      let title;
+      try {
+        title = meiXML
+          .match(/<pgHead.*?<\/pgHead>/s)[0]
+          .match(/<rend.*?<\/rend>/s)[0]
+          .match(/>.*?</s)[0]
+          .slice(1, -1);
+      } catch (e) {
         try {
           title = meiXML
-            .match(/<pgHead.*?<\/pgHead>/s)[0]
-            .match(/<rend.*?<\/rend>/s)[0]
+            .match(/<title>.*?<\/title>/s)[0]
             .match(/>.*?</s)[0]
             .slice(1, -1);
         } catch (e) {
-          try {
-            title = meiXML
-              .match(/<title>.*?<\/title>/s)[0]
-              .match(/>.*?</s)[0]
-              .slice(1, -1);
-          } catch (e) {
-            title = 'Titre inconnu';
-          }
+          title = 'Titre inconnu';
         }
-        // remove title, author and comment that are overlapping each other and are not useful in the preview
-        meiXML = meiXML.replace(/<pgHead.*?<\/pgHead>/s, '');
-        paginatedScores.value.push({ fileName: fileName, title: title, svg: '' });
-        verovio.ensureTkInitialized().then(() => {
-          // parameters for rendering
-          // same as in ejs version
-          // parameter never used in the ejs version only the preset value
-          const parentWidth = 180;
-          const parentHeight = 250;
-          const zoom = 20;
-          const pageHeight = (parentHeight * 100) / zoom;
-          const pageWidth = (parentWidth * 100) / zoom;
-
-          const options = {
-            pageHeight: pageHeight,
-            pageWidth: pageWidth,
-            scale: zoom,
-          };
-          verovio.tk.setOptions(options);
-          let index = paginatedScores.value.findIndex((score) => score.fileName === fileName);
-          if (index !== -1) {
-            verovio.tk.loadData(meiXML);
-            paginatedScores.value[index]['svg'] = verovio.tk.renderToSVG(1);
-          }
-        });
+      }
+      // remove title, author and comment that are overlapping each other and are not useful in the preview
+      meiXML = meiXML.replace(/<pgHead.*?<\/pgHead>/s, '');
+      paginatedScores.value.push({ fileName: fileName, title: title, svg: '' });
+      verovio.ensureTkInitialized().then(() => {
+        // parameters for rendering
+        // same as in ejs version
+        // parameter never used in the ejs version only the preset value
+        const parentWidth = 180;
+        const parentHeight = 250;
+        const zoom = 20;
+        const pageHeight = (parentHeight * 100) / zoom;
+        const pageWidth = (parentWidth * 100) / zoom;
+        const options = {
+          pageHeight: pageHeight,
+          pageWidth: pageWidth,
+          scale: zoom,
+        };
+        verovio.tk.setOptions(options);
+        let index = paginatedScores.value.findIndex((score) => score.fileName === fileName);
+        if (index !== -1) {
+          verovio.tk.loadData(meiXML);
+          paginatedScores.value[index]['svg'] = verovio.tk.renderToSVG(1);
+        }
       });
     });
-  } else {
-    // todo: manage result data
-  }
+  });
 }
 </script>
 

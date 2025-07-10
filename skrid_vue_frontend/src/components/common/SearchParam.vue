@@ -155,7 +155,7 @@ import { onMounted, ref } from 'vue';
 defineOptions({
   name: 'SearchParam',
 });
-const emit = defineEmits(['receiveData']);
+const emit = defineEmits(['receiveData', 'showPaginatedResult']);
 const staveRepr = StaveRepresentation.getInstance();
 const authors = useAuthorsStore();
 const advancedOptionShow = ref(false); //flag for display advanced options or not
@@ -200,6 +200,8 @@ function searchButtonHandler() {
     alert('For transposition and contour search, at least two notes are needed (because it is based on interval between notes).');
     return;
   }
+
+  // sho
 
   // Prepare the search parameters
   const notesQueryParam = createNotesQueryParam(staveRepr.melody, !pitch_cb.value, !rhythm_cb.value);
