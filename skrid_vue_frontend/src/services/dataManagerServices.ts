@@ -1,3 +1,6 @@
+import { durationNote } from "@/constants/index.ts"
+import type { Duration } from "neo4j-driver";
+import { StaveNote } from "vexflow";
 /**
  * Return the sub-array corresponding to the data from page `pageNb`.
  *
@@ -19,7 +22,7 @@ export function getPageN(data: any[], pageNb: number, numberPerPage: number) {
  * @returns {boolean}
  */
 export function isCollectionData(data: Array<any>): boolean {
-    return data[0].hasOwnProperty('s') || (data[0].hasOwnProperty('_fields') && data[0]._fields[0].hasOwnProperty('properties'));
+    return data[0].hasOwnProperty('global_degree') && data[0].hasOwnProperty('notes');
 }
 
 /**
@@ -30,7 +33,7 @@ export function isCollectionData(data: Array<any>): boolean {
  * @param {float} degree - the match degree for a given note
  * @returns {string} a color corresponding best to `degree`
  */
-function getGradientColor(degree: any): string {
+export function getGradientColor(degree: any): string {
     const gray = {r: 100, g: 100, b: 100};
     const white = {r: 255, g: 255, b: 255};
     const red = {r: 255, g: 0, b: 0};
@@ -70,3 +73,46 @@ function interpolateBetweenColors(fromColor: any, toColor: any, percent: number)
 
     return `rgb(${r}, ${g}, ${b})`;
 };
+
+/** 
+ * Create the `notes` for the python script
+ * @param {Array<StaveNote>} melody - the melody to convert to a query parameter ;
+ * @param {boolean} ignore_pitch - if true, the pitch of the notes is ignored ;
+ * @param {boolean} ignore_rhythm - if true, the rhythm of the notes is ignored ;
+ * 
+ * @return {string} the notes query parameter, ready to be used in the python script.
+ */
+export function createNotesQueryParam(melody:any, ignore_pitch:boolean, ignore_rhythm: boolean) {
+    let notes = '[';
+    for (let k = 0 ; k < melody.length ; ++k) {
+        notes += '([';
+
+        //---Add pitch (class + octave)
+        for (let note_idx = 0 ; note_idx < melody[k].keys.length ; ++note_idx) {
+            let note = melody[k].keys[note_idx];
+
+            //---Add note class ('a', 'gs', ...)
+            if (ignore_pitch)
+                notes += 'None, ';
+            else if ((melody[k] as any ).noteType == 'r') // rest
+                notes += "'r', ";
+            else
+                notes += `'${note}', `
+        }
+        notes = notes.slice(0, -2) + '], '; // Remove trailing ', '
+
+        //---Add duration
+        if (ignore_rhythm)
+            notes += 'None, 0), ';
+        else {
+            let dur = 1 / durationNote[melody[k].duration];
+            let dots = melody[k].dots || 0;
+
+            notes += `${dur}, ${dots}), `;
+        }
+    }
+
+    notes = notes.slice(0, -2) + ']' // Remove trailing ', ' and add ']'.
+    
+    return notes
+}
