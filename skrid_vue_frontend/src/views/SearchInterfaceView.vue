@@ -5,9 +5,9 @@
       <br />
       <keyboard></keyboard>
       <br />
-      <search-param></search-param>
+      <search-param @receiveData="getData"></search-param>
     </div>
-    <paginated-results :data="resultsQuery" v-if="resultsQuery"/>
+    <paginated-results :data="searchResults" v-if="searchResults"/>
   </div>
 </template>
 
@@ -22,7 +22,13 @@ defineOptions({
   name: 'SearchInterfaceView',
 });
 
-const resultsQuery = ref(null);
+const searchResults = ref(null);
+
+function getData(data) {
+  // This function receives the data from SearchParam component
+  // and updates the searchResults ref to trigger reactivity
+  searchResults.value = data;
+}
 
 </script>
 
