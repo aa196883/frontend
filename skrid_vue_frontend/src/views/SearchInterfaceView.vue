@@ -5,7 +5,7 @@
       <keyboard></keyboard>
       <search-param @receiveData="getData" @showPaginatedResult="showPaginatedResults()"></search-param>
     </div>
-    <paginated-results :loading="loadingResults" :data="searchResults" v-if="paginatedIsShown"/>
+    <paginated-results :loading="resultsIsLoading" :data="searchResults" v-if="paginatedIsShown"/>
   </div>
 </template>
 
@@ -21,18 +21,19 @@ defineOptions({
 });
 
 const paginatedIsShown = ref(false);
-const searchResults = ref(null);
+const searchResults = ref([]);
 const resultsIsLoading = ref(false);
 
 function showPaginatedResults() {
-  // This function is called when the SearchParam component emits the showPaginatedResult event
+  // This function is called when the SearchParam start a search
   paginatedIsShown.value = true;
   resultsIsLoading.value = true; // Set loading state to true while results are being fetched
 }
 
 function getData(data) {
   // This function receives the data from SearchParam component
-  // and updates the searchResults ref to trigger reactivity
+  // and updates the searchResults to displayed them in PaginatedResults component
+  // It also sets the loading state to false after data is received
   searchResults.value = data;
   resultsIsLoading.value = false; // Set loading state to false after data is received
 }

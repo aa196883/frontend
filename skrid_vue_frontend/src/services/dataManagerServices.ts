@@ -24,15 +24,15 @@ export function getPageN(data: any[], pageNb: number, numberPerPage: number) {
  * @returns {string} a color corresponding best to `degree`
  */
 export function getGradientColor(degree: any): string {
-    const gray = {r: 100, g: 100, b: 100};
-    const white = {r: 255, g: 255, b: 255};
-    const red = {r: 255, g: 0, b: 0};
-    const green = {r: 0, g: 255, b: 0};
-    const dark_green = {r: 0, g: 179, b: 0};
-    const blue = {r: 0, g: 0, b: 255};
-    const yellow = {r: 255, g: 255, b: 0};
-    const dark_yellow = {r: 215, g: 215, b: 0};
-    const cyan = {r: 0, g: 255, b: 255};
+    const gray = { r: 100, g: 100, b: 100 };
+    const white = { r: 255, g: 255, b: 255 };
+    const red = { r: 255, g: 0, b: 0 };
+    const green = { r: 0, g: 255, b: 0 };
+    const dark_green = { r: 0, g: 179, b: 0 };
+    const blue = { r: 0, g: 0, b: 255 };
+    const yellow = { r: 255, g: 255, b: 0 };
+    const dark_yellow = { r: 215, g: 215, b: 0 };
+    const cyan = { r: 0, g: 255, b: 255 };
 
     let a = dark_green;
     let b = dark_yellow;
@@ -55,7 +55,7 @@ export function getGradientColor(degree: any): string {
  *
  * @returns {string} an RGB string.
  */
-function interpolateBetweenColors(fromColor: any, toColor: any, percent: number):string {
+function interpolateBetweenColors(fromColor: any, toColor: any, percent: number): string {
     const delta = percent / 100;
     const r = Math.round(toColor.r + (fromColor.r - toColor.r) * delta);
     const g = Math.round(toColor.g + (fromColor.g - toColor.g) * delta);
@@ -72,19 +72,19 @@ function interpolateBetweenColors(fromColor: any, toColor: any, percent: number)
  *
  * @return {string} the notes query parameter, ready to be used in the python script.
  */
-export function createNotesQueryParam(melody:any, ignore_pitch:boolean, ignore_rhythm: boolean) {
+export function createNotesQueryParam(melody: any, ignore_pitch: boolean, ignore_rhythm: boolean) {
     let notes = '[';
-    for (let k = 0 ; k < melody.length ; ++k) {
+    for (let k = 0; k < melody.length; ++k) {
         notes += '([';
 
         //---Add pitch (class + octave)
-        for (let note_idx = 0 ; note_idx < melody[k].keys.length ; ++note_idx) {
+        for (let note_idx = 0; note_idx < melody[k].keys.length; ++note_idx) {
             let note = melody[k].keys[note_idx];
 
             //---Add note class ('a', 'gs', ...)
             if (ignore_pitch)
                 notes += 'None, ';
-            else if ((melody[k] as any ).noteType == 'r') // rest
+            else if ((melody[k] as any).noteType == 'r') // rest
                 notes += "'r', ";
             else
                 notes += `'${note}', `
@@ -105,4 +105,18 @@ export function createNotesQueryParam(melody:any, ignore_pitch:boolean, ignore_r
     notes = notes.slice(0, -2) + ']' // Remove trailing ', ' and add ']'.
 
     return notes
+}
+
+export function extractTitleFromMeiXML(meiXML: string): string {
+    // Try to extract the title from the <pgHead> tag
+    return meiXML.match(/<pgHead.*?<\/pgHead>/s)?.[0]
+        .match(/<rend.*?<\/rend>/s)?.[0]
+        .match(/>.*?</s)?.[0]
+        .slice?.(1, -1)
+        ?? // if no pgHead found, try to get title from <title> tag
+        meiXML.match(/<title>.*?<\/title>/s)?.[0]
+            .match(/>.*?</s)?.[0]
+            .slice?.(1, -1)
+        ?? // if no title found, return a default value
+        "Titre inconnu";
 }

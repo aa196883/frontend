@@ -54,7 +54,7 @@
 <script setup>
 import { useAuthorsStore } from '@/stores/authorsStore';
 import { useVerovioStore } from '@/stores/verovioStore';
-import { getPageN } from '@/services/dataManagerServices';
+import { getPageN, extractTitleFromMeiXML} from '@/services/dataManagerServices';
 import { fetchMeiFileByFileName } from '@/services/dataBaseQueryServices';
 import { computed, ref, watch } from 'vue';
 
@@ -64,12 +64,14 @@ defineOptions({
 
 const props = defineProps({
   data: {
-    type: [Array, null],
+    type: Array,
+    default: () => [],
     required: true,
   },
   loading: {
     type: Boolean,
     default: true,
+    required: true,
   },
 });
 
@@ -144,23 +146,7 @@ function LoadPageN() {
     console.log('fileName', fileName);
     fetchMeiFileByFileName(fileName, authors.selectedAuthorName).then((meiXML) => {
       // extract title
-      let title;
-      try {
-        title = meiXML
-          .match(/<pgHead.*?<\/pgHead>/s)[0]
-          .match(/<rend.*?<\/rend>/s)[0]
-          .match(/>.*?</s)[0]
-          .slice(1, -1);
-      } catch (e) {
-        try {
-          title = meiXML
-            .match(/<title>.*?<\/title>/s)[0]
-            .match(/>.*?</s)[0]
-            .slice(1, -1);
-        } catch (e) {
-          title = 'Titre inconnu';
-        }
-      }
+      let title = extractTitleFromMeiXML(meiXML);
       // remove title, author and comment that are overlapping each other and are not useful in the preview
       meiXML = meiXML.replace(/<pgHead.*?<\/pgHead>/s, '');
       paginatedScores.value.push({ fileName: fileName, title: title, svg: '' });
@@ -183,7 +169,12 @@ function LoadPageN() {
         if (index !== -1) {
           verovio.tk.loadData(meiXML);
           paginatedScores.value[index]['svg'] = verovio.tk.renderToSVG(1);
+          if (item["matches"]) {
+            paginatedScores.value[index]['nbOccurence'] = item["nbOccurence"];
+
+          }
         }
+
       });
     });
   });

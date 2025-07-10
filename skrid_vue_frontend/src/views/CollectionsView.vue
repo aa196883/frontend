@@ -39,7 +39,7 @@
           <a :href="`data/${authors.selectedNameAuthor}/archives/${authors.selectedNameAuthor}_FilesPdf.zip`">PDF</a>,
           <a :href="`data/${authors.selectedNameAuthor}/archives/${authors.selectedNameAuthor}_FilesSvg.zip`">SVG</a>
         </p>
-        <paginated-results :data="collectionScoresMetadata" />
+        <paginated-results :data="collectionScoresMetadata" :loading="isLoading" />
       </div>
     </div>
   </div>
@@ -55,21 +55,26 @@ defineOptions({
   name: 'CollectionsView',
 });
 
+const isLoading = ref(true);
 const authors = useAuthorsStore();
-const collectionScoresMetadata = ref(null);
+const collectionScoresMetadata = ref([]);
 
 onMounted(() => {
   authors.loadAuthors().then(() => {
+    isLoading.value = true;
     fetchCollectionScoresNamesByAuthor(authors.selectedAuthorName).then((data) => {
       collectionScoresMetadata.value = data;
+      isLoading.value = false;
     });
   });
 });
 
 const authorButtonHandler = (author, index) => {
   authors.selectedAuthorIndex = index;
+  isLoading.value = true;
   fetchCollectionScoresNamesByAuthor(authors.selectedAuthorName).then((data) => {
     collectionScoresMetadata.value = data;
+    isLoading.value = false;
   });
 };
 </script>

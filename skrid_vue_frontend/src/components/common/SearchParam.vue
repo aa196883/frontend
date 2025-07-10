@@ -201,7 +201,8 @@ function searchButtonHandler() {
     return;
   }
 
-  // sho
+  // show paginated-results component
+  emit('showPaginatedResult');
 
   // Prepare the search parameters
   const notesQueryParam = createNotesQueryParam(staveRepr.melody, !pitch_cb.value, !rhythm_cb.value);
