@@ -24,7 +24,7 @@ export async function fetchAuthors() {
  */
 export async function fetchCollectionScoresNamesByAuthor(author: string) {
     try {
-        const response = await api.post(`/collection/${author}`, data);
+        const response = await api.get(`/collection/${author}`);
         return response.data.results;
     } catch (error) {
         console.error("Error fetching collection data of collection" + author + " :", error);
