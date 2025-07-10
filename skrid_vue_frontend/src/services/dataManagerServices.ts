@@ -16,7 +16,7 @@ export function getPageN(data: any[], pageNb: number, numberPerPage: number) {
 }
 
 /**
- * return true if the data is metadata of a collection ie the list of all filename of the collection (used in collectionView.vue), 
+ * return true if the data is metadata of a collection ie the list of all filename of the collection (used in collectionView.vue),
  * false otherwise ie the data is the result of a query on the database (with match notes etc. used in searchInterface.vue)
  * @param data fetched from the database
  * @returns {boolean}
@@ -74,12 +74,12 @@ function interpolateBetweenColors(fromColor: any, toColor: any, percent: number)
     return `rgb(${r}, ${g}, ${b})`;
 };
 
-/** 
+/**
  * Create the `notes` for the python script
  * @param {Array<StaveNote>} melody - the melody to convert to a query parameter ;
  * @param {boolean} ignore_pitch - if true, the pitch of the notes is ignored ;
  * @param {boolean} ignore_rhythm - if true, the rhythm of the notes is ignored ;
- * 
+ *
  * @return {string} the notes query parameter, ready to be used in the python script.
  */
 export function createNotesQueryParam(melody:any, ignore_pitch:boolean, ignore_rhythm: boolean) {
@@ -113,6 +113,6 @@ export function createNotesQueryParam(melody:any, ignore_pitch:boolean, ignore_r
     }
 
     notes = notes.slice(0, -2) + ']' // Remove trailing ', ' and add ']'.
-    
+
     return notes
 }

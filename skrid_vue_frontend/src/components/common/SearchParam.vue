@@ -202,7 +202,7 @@ function searchButtonHandler() {
   }
 
   // Prepare the search parameters
-  const notesQueryParam = createNotesQueryParam(staveRepr.melody, pitch_cb.value, rhythm_cb.value);
+  const notesQueryParam = createNotesQueryParam(staveRepr.melody, !pitch_cb.value, !rhythm_cb.value);
 
   const searchParams = {
     collection: authors.selectedAuthorName,
