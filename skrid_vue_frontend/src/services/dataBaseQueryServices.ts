@@ -3,7 +3,7 @@ import api from "./axios.ts";
 
 /**
  * Fetches the list of authors from the server.
- * 
+ *
  * @returns {Promise<string[]>} A promise that resolves to an array of authors.
 */
 export async function fetchAuthors() {
@@ -18,7 +18,7 @@ export async function fetchAuthors() {
 
 /**
  * Fetches all the scores from a specific collection by the given author.
- * 
+ *
  * @param {string} author - The name of the author to filter by.
  * @returns {Promise<Object>} A promise that resolves to the collection data for the specified author.
  */
@@ -55,7 +55,7 @@ export async function fetchMeiFileByFileName(fileName: string, authorName: strin
 
 /**
  * Fetches fuzzy query based on the provided data.
- * 
+ *
  * @param {SearchParams} data - The data to be sent in the request body.
  * @returns {Promise<Object>} A promise that resolves to the query results.
  */
@@ -64,7 +64,7 @@ export async function fetchSearchResults(searchParams: SearchParams){
         const response = await api.post("/search-results", searchParams);
         return response.data.results;
     } catch (error) {
-        console.error("Error fetching search-result", error);
+        console.error("Error fetching /search-results", error);
         throw error;
     }
 }
