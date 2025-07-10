@@ -4,7 +4,7 @@
   "description": "SKRID Platform is an interface to a graph database designed to explore musical patterns in music scores.",
   "main": "index.js",
   "scripts": {
-    "nodemon": "nodemon -i index.js",
+    "nodemon": "nodemon --watch index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate-docs": "node_modules/.bin/jsdoc -c jsdoc.json"
   },
