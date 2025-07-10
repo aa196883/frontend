@@ -91,7 +91,7 @@ function fetchPageData(author) {
         "query": query,
     };
 
-    return fetch(`${BASE_PATH}/crisp-query-results`, {
+    return fetch(`${BASE_PATH}/crisp-query-results`, { //TODO: post on backend directly instead
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

@@ -86,7 +86,7 @@ function queryEditsDB(query) {
 /**
  * Logs the error and return a string corresponding to the problem (string that will be shown to the client).
  *
- * @param {string} caller - the caller name (e.g '/fuzzy-query'). Used for logs ;
+ * @param {string} caller - the caller name (e.g '/search-results'). Used for logs ;
  * @param {*} data - the error data.
  */
 function handlePythonStdErr(caller, data) {
@@ -292,7 +292,7 @@ app.get('/result', (req, res) => {
  * @constant /search
  * @todo this seems to be a duplicate of /searchInterface
  */
-app.get('/search', async function (req, res) {
+app.get('/search', async function (req, res) { //TODO: remove this endpoint as it is not used?
     const searchTerm = req.query.query;
     let results = [];
     let authors = [];
@@ -349,7 +349,7 @@ app.get('/authors', async function (req, res) {
  *
  * @constant /crisp-query-results
  */
-app.post('/crisp-query-results', (req, res) => {
+app.post('/crisp-query-results', (req, res) => { //TODO: remove this endpoint, call the backend instead when needed, or even better: make new endpoints on the backend (to get)
     const query = req.body.query;
 
     if (queryEditsDB(query)) {
@@ -379,12 +379,14 @@ app.post('/crisp-query-results', (req, res) => {
 });
 
 /**
- * This endpoint makes a fuzzy query from notes, filters and fuzzy parameters.
+ * This endpoint receives the melody and search parameters and returns the associated (processed) results.
+ *
+ * It transmits the call to `/search-results` on the backend.
  *
  * Data to post :
  *     ```
  *     {
- *         'notes': "[(class, octave, duration), ...]",
+ *         'notes': str,
  *         'pitch_distance': float,
  *         'duration_factor': float,
  *         'duration_gap': float,
@@ -394,157 +396,65 @@ app.post('/crisp-query-results', (req, res) => {
  *         'collection': str
  *     }
  *     ```
- * If some parameters (apart `notes`) are not specified, they will take their default values.
- * 
- * Returns a fuzzy query, in the following form: `{'query': string}`
+ *
+ *     Format of `notes`:
+ *         - For a normal search: in the shape of ` "[([note1, ...], duration, dots), ...]"`, e.g `[(["c#/5", "d/5"], 4, 0), (["c/5"], 16, 0)]`.
+ *         - For a contour search: TODO
+ *
+ *     If some parameters (apart `notes`) are not specified, they will take their default values.
+ *
+ * Returns:
+ *     The results, in the following format: `{ 'results': r }`, where `r` has the following shape:
+ *     ```
+ *     [
+ *         {
+ *             'source': str,
+ *             'number_of_occurrences': int,
+ *             'max_match_degree': int,       (opt)
+ *             'matches': [                   (opt)
+ *                 {
+ *                     'overall_degree': int,
+ *                     'notes': [
+ *                         {
+ *                             'note_deg': int,
+ *                             'pitch_deg': int,
+ *                             'duration_deg': int,
+ *                             'sequencing_deg': int,
+ *                             'id': str
+ *                         },
+ *                         ...
+ *                     ]
+ *                 },
+ *                 ...
+ *             ]
+ *         },
+ *         ...
+ *     ]
+ *     ```
  *
  * POST
  *
- * @constant /fuzzy-query
+ * @constant /search-results
  */
-app.post('/fuzzy-query', async (req, res) => {
+app.post('/search-results', async (req, res) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/generate-query`, {
+        const response = await fetch(`${API_BASE_URL}/search-results`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req.body)
         });
 
-        const data = await response.json();  // Receive { query: ... } or { error: ... }
+        const data = await response.json();  // Receive { results: ... } or { error: ... }
 
         if (!response.ok) {
             return res.status(response.status).json({ error: data.error || 'Flask returned an error' });
         }
-        log('info', `/fuzzy-query: generated ${data.query}`);
+
         return res.json(data);  // Forward response to browser
 
     } catch (error) {
-        console.error('/fuzzy-query failed:', error);
+        console.error('/search-results failed:', error);
         return res.status(500).json({ error: 'Internal server error connecting to Flask API' });
-    }
-});
-
-
-// Endpoint pour traiter l'audio et créer une requête
-/** 
-*
-* @constant /createQueryFromAudio
-*/
-app.post('/createQueryFromAudio', upload.single('audio'), (req, res) => {
-    // Get the params
-    let pitch_distance = req.body.pitch_distance;
-    let duration_factor = req.body.duration_factor;
-    let duration_gap = req.body.duration_gap;
-    let alpha = req.body.alpha;
-    let allow_transposition = req.body.allow_transposition;
-    let contour_match = req.body.contour_match;
-    let collection = req.body.collection;
-
-    // Set default values if some params are null
-    if (pitch_distance == null)
-        pitch_distance = 0;
-    if (duration_factor == null)
-        duration_factor = 1;
-    if (duration_gap == null)
-        duration_gap = 0;
-    if (alpha == null)
-        alpha = 0;
-    if (allow_transposition == null)
-        allow_transposition = false;
-    if (contour_match == null)
-        contour_match = false;
-
-    // Create the connection
-    log('info', `/fuzzy-query: openning connection.`);
-    const { spawn } = require('child_process');
-    let args = [
-        'compilation_requete_fuzzy/audio_parser.py',
-        '-p', pitch_distance,
-        '-f', duration_factor,
-        '-g', duration_gap,
-        '-a', alpha,
-    ];
-    if (allow_transposition)
-        args.push('-t');
-
-    if (contour_match)
-        args.push('-C');
-
-    if (collection != null) {
-        args.push('-c');
-        args.push(collection);
-    }
-    let pyParserWrite = spawn('python3', args);
-
-    // Get the data
-    let allData = '';
-    pyParserWrite.stdout.on('data', data => {
-        log('info', `/fuzzy-query: received data (${data.length} bytes) from python script.`);
-        allData += data.toString();
-    });
-
-    // log stderr
-    let errors = [];
-    pyParserWrite.stderr.on('data', data => {
-        let e = handlePythonStdErr('/fuzzy-query', data);
-
-        if (e != null)
-            errors.push(e);
-    });
-
-    // Send the data to the client
-    pyParserWrite.stdout.on('close', () => {
-        log('info', `/fuzzy-query: connection closed.`);
-
-        if (errors.length > 0)
-            return res.json({ error: errors.slice(-1)[0] });
-
-        return res.json({ query: allData });
-    });
-});
-
-/**
- * This endpoint sends a fuzzy query and process its results.
- *
- * Data to post : `{'query': some_fuzzy_query, 'format': f}`, where f is 'json' or 'text'.
- *
- * Returns `{results: json[]}`
- *
- * POST
- *
- * @constant /fuzzy-query-results
- */
-app.post('/fuzzy-query-results', async (req, res) => {
-    const query = req.body.query;
-    try {
-        // Prevent DB edits
-        if (queryEditsDB(query)) {
-            log('info', `/fuzzy-query-results: Operation not allowed.`);
-            return res.json({ error: 'Operation not allowed.' });
-        }
-        log('info', `/fuzzy-query-results: forwarding fuzzy query to Flask backend.`);
-
-        const response = await fetch(`${API_BASE_URL}/execute-fuzzy-query`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                query: query,
-                format: 'json'
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || data.error) {
-            return res.status(400).json({ error: data.error || 'Flask returned an error' });
-        }
-
-        // Format result like original logic
-        return res.json({ results: data.result || '[]' });
-
-    } catch (err) {
-        console.error(`/fuzzy-query-results: error`, err);
-        return res.status(500).json({ error: 'Internal server error contacting Flask' });
     }
 });
 
@@ -553,7 +463,7 @@ app.post('/fuzzy-query-results', async (req, res) => {
  *
  * Data to post : the audio file.
  *
- * Returns the notes, in the following form: `{'notes': string}` TODO: is this correct?
+ * Returns the notes, in the following form: `{'notes': string}`
  *
  * POST
  *

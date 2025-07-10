@@ -9,119 +9,6 @@ import { ensureTkInitialized, loadPageN, tk } from './paginated_results.js';
 const max_url_length = 16000;
 
 /**
- * The results are returned match by match. This functions group the matches by source.
- *
- * It count the number of occurrences, and add the note IDs when possible.
- *
- * @param {*} queryResults - the result of the query ;
- * @param {*} queryResults.result - the content of the result.
- *
- * @returns an array of results correctly filtered, in the following format : `[\{source, number_of_occurrences: <nb>, notes_id: \{id: degree, ...\}, matches: m\}, ...]`,
- * where `m` is a matrix of notes : `m[k]` is the `k`-th match in the source file, containing the notes `m[k][0]` to `m[k][n - 1]` (where `n` would be the number of notes in the search pattern).
- *
- * If the query was not fuzzy, then the field `matches` will not be set.
- *
- * @todo there is too much complexity in this function, as it was needed to handle all the cases of different json results formats. It should not be the case now (unless for manual queries that are not fuzzy).
- */
-function unifyResults(queryResults) {
-    let results = []; // the array that will be returned ;
-    const occurrences = {}; // used to count the number of occurrences of scores ;
-    let notes_temp = {}; // used to store the IDs of the notes (format: {id: degree, ...}) ;
-
-    queryResults.results.forEach(result => {
-        //---Get the source
-        let name;
-        try {
-            name = result._fields[0];
-        }
-        catch {
-            if ('source' in result)
-                name = result.source;
-            else if ('event1.source' in result)
-                name = result['event1.source'];
-            else
-                name = result.name;
-        }
-
-        //---Get note array
-        let notes_arr = [];
-        if ('notes' in result)
-            notes_arr = result.notes;
-        else if ('_fields' in result)
-            notes_arr = result._fields.slice(1); // Remove the first element
-
-        //---Adding it to results
-        if (!occurrences[name]) { // The source element has not been seen yet
-            occurrences[name] = 1;
-            notes_temp = {};
-
-            //-Adding the IDs to the id array
-            for(let k = 0; k < notes_arr.length; k++) {
-                if (typeof(notes_arr[k]) == 'string')
-                    notes_temp[notes_arr[k]] = 1;
-                else if ('note_deg' in notes_arr[k]) // For fuzzy queries, add the 'note_deg'info
-                    notes_temp[notes_arr[k].note.id] = notes_arr[k].note_deg;
-                else
-                    notes_temp[notes_arr[k].note.id] = 1;
-            }
-
-            if ('id' in result) { // This is for crisp queries (when returning id)
-                notes_temp[result.id] = 1;
-            }
-            else { // This is also for crisp queries (taken from console of piano interface) with 'mei_id_event1, ...' id
-                let k = 1;
-                while ('mei_id_event' + k in result) { // Adding all the IDs that are present ('mei_id_event1', 'mei_id_event2', ...)
-                    notes_temp[result['mei_id_event' + k]] = 1;
-                    ++k;
-                }
-
-                k = 0 // Same but for fuzzy queries compilated to crisp queries.
-                while ('id_' + k in result) { // Adding all the IDs that are present ('id_0', 'id_1', ...)
-                    notes_temp[result['id_' + k]] = 1;
-                    ++k;
-                }
-            }
-
-            if ('notes' in result)
-                results.push({ name, number_of_occurrences: 1, overall_degree: result.overall_degree, matches: [result.notes], notes_id: notes_temp});
-            else if ('overall_degree' in result)
-                results.push({ name, number_of_occurrences: 1, overall_degree: result.overall_degree, notes_id: notes_temp});
-            else
-                results.push({ name, number_of_occurrences: 1, notes_id: notes_temp});
-        }
-        else { // The source element has already been seen. Note that we do not update overall_degree here as we want to keep the max one, and the elements are ordered.
-            //-Find the source in results and increase number of occurrences
-            occurrences[name]++;
-
-            const index = results.findIndex(item => item.name === name);
-            results[index].number_of_occurrences = occurrences[name];
-
-            if ('matches' in results[index]) {
-                // results[index].notes = results[index].notes.concat(notes_arr);
-                results[index].matches.push(result.notes);
-            }
-
-            //-Adding the IDs to the id array
-            for(let k = 0; k < notes_arr.length; k++) {
-                // results[index].notes_id.push(notes_arr[k].note.id);
-
-                if (typeof(notes_arr[k]) == 'string')
-                    results[index].notes_id[notes_arr[k]] = 1;
-                else if ('note_deg' in notes_arr[k]) // For fuzzy queries, add the 'note_deg'info
-                    results[index].notes_id[notes_arr[k].note.id] = notes_arr[k].note_deg;
-                else
-                    results[index].notes_id[notes_arr[k].note.id] = 1;
-            }
-            if ('id' in result) {
-                notes_temp[result.id] = 1;
-            }
-        }
-    });
-
-    return results;
-}
-
-/**
  * Extract the notes from a query using regular expressions.
  *
  * @returns {string} the notes in the format described in {@linkcode makeUrl}
@@ -212,22 +99,22 @@ function makeUrl(collection, source, pattern=null, matches=null) {
 
         for (let i = 0 ; i < matches.length ; ++i) {
             let url_match = '';
-            for (let j = 0 ; j < matches[i].length ; ++j) {
+            for (let j = 0 ; j < matches[i].notes.length ; ++j) {
                 // Get note data and convert to an int in [0 ; 100]
-                let deg = Math.floor(100 * matches[i][j].note_deg);
-                let pitch_deg = Math.floor(100 * matches[i][j].pitch_deg);
-                let duration_deg = Math.floor(100 * matches[i][j].duration_deg);
-                let sequencing_deg = Math.floor(100 * matches[i][j].sequencing_deg);
+                let deg = Math.floor(100 * matches[i].notes[j].note_deg);
+                let pitch_deg = Math.floor(100 * matches[i].notes[j].pitch_deg);
+                let duration_deg = Math.floor(100 * matches[i].notes[j].duration_deg);
+                let sequencing_deg = Math.floor(100 * matches[i].notes[j].sequencing_deg);
 
                 // Add note to `url_match`
-                url_match += `${matches[i][j].note.id},${deg},${pitch_deg},${duration_deg},${sequencing_deg}`;
+                url_match += `${matches[i].notes[j].id},${deg},${pitch_deg},${duration_deg},${sequencing_deg}`;
                 
-                let membership_functions_degrees = matches[i][j].membership_functions_degrees
+                let membership_functions_degrees = matches[i].notes[j].membership_functions_degrees
                 if(membership_functions_degrees) {
                     url_match += `,${membership_functions_degrees}`;
                 }
                 // Separate notes with ';'
-                if (j < matches[i].length - 1)
+                if (j < matches[i].notes.length - 1)
                     url_match += ';';
             }
 
@@ -530,4 +417,4 @@ function fillPreviews(results) {
     }
 }
 
-export { loadPreviews, unifyResults, getGradientColor, extractMelodyFromQuery };
+export { loadPreviews, getGradientColor, extractMelodyFromQuery };

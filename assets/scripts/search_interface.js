@@ -7,7 +7,7 @@
 
 //========= Imports =========//
 import { loadPageN } from './paginated_results.js';
-import { unifyResults, extractMelodyFromQuery } from './preview_scores.js';
+import { extractMelodyFromQuery } from './preview_scores.js';
 import { StaveRepresentation, Player } from './stave.js';
 
 
@@ -221,7 +221,7 @@ function sendQuery(fuzzyQuery) {
 
         if ('results' in data) {
             // Load the first page
-            dataDiv.textContent = JSON.stringify(unifyResults({results: JSON.parse(data.results)}));
+            dataDiv.textContent = data.results;
             patternDiv.textContent = extractMelodyFromQuery(fuzzyQuery);
             loadPageN(1, null, true, true, true);
         }
