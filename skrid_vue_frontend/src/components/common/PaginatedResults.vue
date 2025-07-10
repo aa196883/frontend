@@ -34,7 +34,7 @@
       >
         <div class="music-score-box" :id="score.fileName" v-html="score.svg"></div>
         <p v-if="score.nbOccurence" class="score_author">Occurences : {{ score.nbOccurence }}</p>
-        <p v-if="score.satisfaction" class="score_author">Satisfaction : {{ score.satisfaction }}</p>
+        <p v-if="score.satisfaction" class="score_author">Satisfaction : {{ score.satisfaction }}%</p>
         <h4 v-if="score.title" class="score_title">{{ score.title }}</h4>
       </a>
     </div>
@@ -140,10 +140,12 @@ function LoadPageN() {
   // slice the data from the page requested
   let dataSlice = getPageN(props.data, pageNb.value, nbPerPage.value);
 
+  // check if the data is a collection data or a search result
+  const isCollectionData = typeof(dataSlice[0]) === 'string';
   console.log('dataSlice', dataSlice);
   dataSlice.forEach((item) => {
-    let fileName = item.source;
-    console.log('fileName', fileName);
+    // use item.source if data is search result, item itself if data is collection score names
+    let fileName = isCollectionData ? item : item.source; 
     fetchMeiFileByFileName(fileName, authors.selectedAuthorName).then((meiXML) => {
       // extract title
       let title = extractTitleFromMeiXML(meiXML);
@@ -169,9 +171,10 @@ function LoadPageN() {
         if (index !== -1) {
           verovio.tk.loadData(meiXML);
           paginatedScores.value[index]['svg'] = verovio.tk.renderToSVG(1);
-          if (item["matches"]) {
-            paginatedScores.value[index]['nbOccurence'] = item["nbOccurence"];
-
+          if (isCollectionData) {
+            paginatedScores.value[index]['nbOccurence'] = item["number_of_occurrences"];
+            paginatedScores.value[index]['satisfaction'] = item["max_match_degree"];
+            
           }
         }
 
