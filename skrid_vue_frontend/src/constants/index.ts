@@ -1,14 +1,5 @@
 /** All the possible durations for a note */
-export const durationNote = {
-    '32': 1 / 32,         // thirty-second (triple croche)
-    '16': 1 / 16,         // sixteenth (double croche)
-    '8': 1 / 8,           // eighth (croche)
-    'q': 1 / 4,           // (quarter)
-    'h': 1 / 2,           // (half)
-    'w': 1              // (whole)
-};
-
-export const durationNoteWithDots = {
+export const durationNote: Record<string, number>= {
     '32': 1 / 32,         // thirty-second (triple croche)
     '32d': 1 / 32 + 1 / 64, // dotted thirty-second (triple croche pointée)
     '16': 1 / 16,         // sixteenth (double croche)
@@ -23,7 +14,7 @@ export const durationNoteWithDots = {
 };
 
 /** The keyboard mapping that tie computer keys with piano notes. Use with `octave` global var. */
-export const mapping_azerty = {
+export const mapping_azerty: Record<string, { pitch: string, octave: number }> = {
     'q': { pitch: 'C', octave: 0 },
     'z': { pitch: 'C#', octave: 0 },
     's': { pitch: 'D', octave: 0 },
@@ -47,12 +38,11 @@ export const mapping_azerty = {
     '*': { pitch: 'G', octave: 1 },
     '$': { pitch: 'G#', octave: 1 },
     //TODO: there is also A, A#, and B (/5) missing
-    // 'b': 'r' // silence
     'b': { pitch: 'r', octave: 0 },
 }
 
 /** Used to convert qwerty keys to the azerty corresponding ones. */
-export const qwerty_us_to_azerty = {
+export const qwerty_us_to_azerty: Record<string, string> = {
     'q': 'a',
     'w': 'z',
     'a': 'q',
