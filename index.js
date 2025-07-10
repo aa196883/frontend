@@ -319,25 +319,29 @@ app.get('/search', async function (req, res) { //TODO: remove this endpoint as i
 
 //============================= Endpoints (get) =============================//
 /**
- * This endpoint will return the list of authors (collections) from the database.
+ * This endpoint will return the list of collections from the database.
  *
  * GET
  *
- * @constant /authors
+ * @constant /collections-names
  */
-app.get('/authors', async function (req, res) {
-    console.log('Fetching authors from the database...');
-    let authors = [];
+app.get('/collections-names', async function (req, res) {
+    log('info', `/collections-names: Fetching authors from the database ...`);
 
-    try {
-        const results = await queryDB("MATCH (s:Score) RETURN DISTINCT s.collection");
-        authors = results.map(record => record['s.collection']);
-        console.log(`/authors: found ${authors} authors`);
-    } catch (err) {
-        log('error', `/authors: ${err.message}`);
-    }
+    fetch(`${API_BASE_URL}/collections-names`, {
+        method: 'GET',
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error)
+                return res.json({ error: data.error });
 
-    res.json(authors);
+            return res.json(data);
+        })
+        .catch(error => {
+            log('error', `/collections-names: ${error.message}`);
+            return res.json({ error: error.message });
+        });
 });
 
 
