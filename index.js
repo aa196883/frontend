@@ -10,6 +10,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 const axios = require('axios');
 const FormData = require('form-data');
 
@@ -38,13 +39,14 @@ app.set("view engine", "ejs");
 
 app.use(cors()); // Use CORS for development of vuejs frontend
 
-app.use(express.static('assets'))
+//============================= Public folders =============================//
+app.use(express.static(path.join(__dirname, 'assets')))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-app.use(express.static('data'));
-app.use('/data', express.static('data'));
+app.use('/data', express.static(path.join(__dirname, 'data')));
 
+app.use(express.static(path.join(__dirname, 'assets/public/'))); // Everything in this folder will be available through the web
 // Rendre le préfixe disponible dans tous les templates EJS
 app.use((req, res, next) => {
     res.locals.BASE_PATH = BASE_PATH;
