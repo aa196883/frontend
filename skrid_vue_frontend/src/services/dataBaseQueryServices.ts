@@ -61,7 +61,7 @@ export async function fetchMeiFileByFileName(fileName: string, authorName: strin
  */
 export async function fetchSearchResults(searchParams: SearchParams){
     try {
-        const response = await api.post("/search-result", searchParams);
+        const response = await api.post("/search-results", searchParams);
         return response.data;
     } catch (error) {
         console.error("Error fetching search-result", error);

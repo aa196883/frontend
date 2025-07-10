@@ -2,9 +2,7 @@
   <div>
     <div class="search-pattern">
       <stave></stave>
-      <br />
       <keyboard></keyboard>
-      <br />
       <search-param @receiveData="getData"></search-param>
     </div>
     <paginated-results :data="searchResults" v-if="searchResults"/>
@@ -39,6 +37,7 @@ function getData(data) {
   flex-direction: column;
   padding: 20px;
   margin-top: 70px;
+  gap: 10px;
   /* border-radius: 20px; */
   /* background-color: rgb(198, 198, 235); */
   /* width: 1000px; */

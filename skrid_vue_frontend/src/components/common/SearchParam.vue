@@ -150,7 +150,7 @@ import { fetchSearchResults } from '@/services/dataBaseQueryServices';
 import { createNotesQueryParam } from '@/services/dataManagerServices';
 import { useAuthorsStore } from '@/stores/authorsStore.ts';
 
-import { onMounted, ref, defineEmits } from 'vue';
+import { onMounted, ref } from 'vue';
 
 defineOptions({
   name: 'SearchParam',
