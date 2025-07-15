@@ -5,14 +5,16 @@ SKRID Platform is a web-based interface for querying and exploring musical patte
 The **backend** (query compilation, result processing, etc.) is maintained in a separate repository:
 ➡️ [SKRID Backend Repository](https://gitlab.inria.fr/skrid/backend)
 
+The **client** (vueJS implementation of the interface) is maintained in a separate repository:
+➡️ [SKRID Client Repository](https://gitlab.inria.fr/skrid/client)
+
 ---
 
 ## ✨ Features
-
+- Communication with a Python backend via REST endpoints
 - Interface for melodic and rhythmic search via interactive piano interface input
 - Flexible contour search
 - Display of musical score collection
-- Communication with a Python backend via REST endpoints
 
 ---
 
@@ -20,19 +22,19 @@ The **backend** (query compilation, result processing, etc.) is maintained in a 
 ```text
 .
 ├── assets/
-│   ├ acoustic_grand_piano/     # Sounds for piano keys
-│   ├ data/                      # Musical data used by the app
-│   ├ public/                    # Images and static assets
-│   ├ scripts/                   # Client-side JS
-│   └ styles/                    # CSS files
-├── docs/                            # Documentation (when generated)
-├── config/                          # Neo4j configuration (legacy)
-├── views/                           # HTML files
-├── index.js                         # Main entry point (Node.js server)
-├── jsdoc.json                       # JSDoc config
-├── package.json                     # npm dependencies
-├── loadAllDB.sh                     # Load data into Neo4j
-├── post_a_query.sh                  # Send Cypher query via curl
+│   ├── acoustic_grand_piano/ # Sounds for piano keys
+│   ├── data/                 # Musical data used by the app
+│   ├── public/               # Images and static assets
+│   ├── scripts/              # Client-side JS
+│   └── styles/               # CSS files
+├── docs/                     # Documentation (when generated)
+├── config/                   # Neo4j configuration (legacy)
+├── views/                    # HTML files
+│
+├── index.js                  # Main entry point (Node.js server)
+├── jsdoc.json                # JSDoc config
+├── package.json              # npm dependencies
+├── loadAllDB.sh              # Load data into Neo4j
 ├── README.md
 └── TODO.md
 ```
@@ -52,12 +54,17 @@ cd frontend
 npm install
 ```
 
-### 3. Start the frontend server
+### 3. Start the frontend API server
 ```bash
 node index.js
 ```
 
-Then visit `http://localhost:3000` in your browser.
+Or, for development (auto-restart on edit):
+```
+npm run nodemon
+```
+
+To see the website, launch the [vueJS client](https://gitlab.inria.fr/skrid/client)
 
 ---
 
@@ -80,9 +87,11 @@ Open `docs/index.html` in your browser.
 ---
 
 ## 💡 Development Notes
-- If you modify `index.js`, restart the server to apply changes.
+- If you edit `index.js`, restart the server to apply changes (or use `nodemon`).
 
 For database setup and ingestion scripts, see the backend project.
+
+- cors package was install for development, but it should not be used in production. It is needed for development in order to connect the vueJS client development server to the frontend server.
 
 ---
 
