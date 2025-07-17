@@ -37,13 +37,11 @@ const upload = multer({ storage: storage });
 app.use(cors()); // Use CORS for development of vuejs frontend
 
 //============================= Public folders =============================//
-app.use(express.static(path.join(__dirname, 'assets')))
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/data', express.static(path.join(__dirname, 'data')));
-
-app.use(express.static(path.join(__dirname, 'assets/public/'))); // Everything in this folder will be available through the web
+app.use('/', express.static(path.join(__dirname, 'assets', 'vuejs')));
+app.use('/data', express.static(path.join(__dirname, 'assets', 'data')));
 
 
 //============================= Functions =============================//
@@ -118,6 +116,14 @@ app.get('/collection/:collection_name', async function (req, res) {
         });
 });
 
+
+//============================= Pages (get) =============================//
+// For any URL (apart the above ones), redirect to the vuejs application.
+// This is needed because the vuejs app is _single page_, but it changes the
+// URL (e.g adding /searchinterface) when the tab changes.
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'assets', 'vuejs', 'index.html'));
+});
 
 //============================= Endpoints (post) =============================//
 /**

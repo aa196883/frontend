@@ -1,11 +1,14 @@
 node_modules/
-docs/
-assets/data/
 venv/
-uploads/
+
+docs/
+
+assets/*
+!assets/data/
+
 package-lock.json
 
 .database_password
+.env
 .DS_Store
 
-.env
