@@ -41,7 +41,47 @@ The **client** (vueJS implementation of the interface) is maintained in a separa
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Production setup
+Follow these instructions to deploy the SKRID frontend.
+
+### 1. Clone the repository
+```bash
+git clone --depth=1 https://gitlab.inria.fr/skrid/frontend.git
+cd frontend
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Create the `.env` file
+Copy the example `.env` file and adjust the values:
+```bash
+cp .env.example .env
+```
+
+### 4. Install the vueJS client
+Run the script `install_client.sh`:
+```bash
+./install_client.sh
+```
+
+<!-- TODO: install the data (mei files, ...) -->
+
+This will clone the `client` repository, build it, and place the files to the right place.
+
+### 5. Start the frontend API server
+```bash
+node index.js
+```
+
+The website will be available at [`localhost:3000`](http://localhost:3000).
+
+---
+
+## 🚀 Development setup
+Follow these instructions to develop or debug the platform.
 
 ### 1. Clone the repository
 ```bash
