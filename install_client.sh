@@ -10,7 +10,7 @@ echo "=================="
 cd assets/
 
 if [[ -d "client/" ]]; then
-    echo "Already clonned. Getting the last updates from main ..."
+    echo "Already cloned. Getting the last updates from main ..."
     cd client/
     git checkout main
     git pull
