@@ -8,7 +8,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const multer = require('multer');
-const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -19,6 +18,7 @@ const cors = require('cors'); // Import cors for development of vuejs frontend
 const app = express();
 const port = 3000;
 
+require('dotenv').config()
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000';
 const BASE_PATH = process.env.BASE_PATH || '';
 
@@ -45,12 +45,6 @@ app.use('/data', express.static(path.join(__dirname, 'data')));
 
 app.use(express.static(path.join(__dirname, 'assets/public/'))); // Everything in this folder will be available through the web
 
-// Rendre le préfixe disponible dans tous les templates EJS
-app.use((req, res, next) => { //TODO: is this still needed with vueJS?
-    res.locals.BASE_PATH = BASE_PATH;
-    next();
-});
-
 
 //============================= Functions =============================//
 /**
@@ -63,15 +57,6 @@ function log(level, msg) {
     console.log(`${(new Date().toUTCString())} - ${level}: ${msg}`);
 }
 
-//============================= Pages (get) =============================//
-
-app.get('/scripts/config.js', (req, res) => {
-    res.set('Content-Type', 'application/javascript');
-    res.send(`
-        const BASE_PATH = '${BASE_PATH}';
-        const API_BASE_URL = '${API_BASE_URL}';
-    `);
-});
 
 //============================= Endpoints (get) =============================//
 /**
@@ -257,6 +242,8 @@ app.post('/convert-recording', upload.single('file'), async (req, res) => {
     }
 });
 
+
+//============================= Launch the server on the given port =============================//
 app.listen(port, () => {
     log('info', `Server listening on port ${port}`)
 })

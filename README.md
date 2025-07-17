@@ -54,7 +54,13 @@ cd frontend
 npm install
 ```
 
-### 3. Start the frontend API server
+### 3. Create the `.env` file
+Copy the example `.env` file and adjust the values:
+```bash
+cp .env.example .env
+```
+
+### 4. Start the frontend API server
 ```bash
 node index.js
 ```

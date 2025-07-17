@@ -7,3 +7,5 @@ package-lock.json
 
 .database_password
 .DS_Store
+
+.env
