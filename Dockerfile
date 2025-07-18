@@ -19,7 +19,7 @@ RUN ./install_client.sh
 #------Install the data folder and generate the other formats (this will take a while)
 #---Fist install verovio
 # Install tools to build verovio
-RUN apt-get update && apt-get install -y cmake g++-12 pip python3-venv librsvg2-bin
+RUN apt-get update && apt-get install -y cmake g++-12 pip python3-venv librsvg2-bin musescore
 
 # Clone and build verovio
 RUN git clone https://github.com/rism-ch/verovio
