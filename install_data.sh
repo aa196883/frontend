@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# This script will download the data from the gitlab repository, and put the files in the right folder.
+# This script will download the data from the gitlab repository, put the files in the right folder, and generate the other formats.
 
 #---Get the repo
 echo "==========================="
@@ -21,3 +21,6 @@ else
     git clone --depth=1 https://gitlab.inria.fr/skrid/data.git
     cd "$folder_name"
 fi
+
+#---Generate the other formats
+make
