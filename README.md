@@ -61,17 +61,23 @@ Copy the example `.env` file and adjust the values:
 cp .env.example .env
 ```
 
-### 4. Install the vueJS client
+### 4. Install the data
+To get the MEI files needed to display the previews, run the script `install_data.sh`:
+```bash
+./install_data.sh
+```
+
+Then you can generate the other formats (see the data's README).
+
+### 5. Install the vueJS client
 Run the script `install_client.sh`:
 ```bash
 ./install_client.sh
 ```
 
-<!-- TODO: install the data (mei files, ...) -->
-
 This will clone the `client` repository, build it, and place the files to the right place.
 
-### 5. Start the frontend API server
+### 6. Start the frontend API server
 ```bash
 node index.js
 ```
@@ -100,7 +106,15 @@ Copy the example `.env` file and adjust the values:
 cp .env.example .env
 ```
 
-### 4. Start the frontend API server
+### 4. Install the data
+To get the MEI files needed to display the previews, run the script `install_data.sh`:
+```bash
+./install_data.sh
+```
+
+Then you can generate the other formats (see the data's README).
+
+### 5. Start the frontend API server
 ```bash
 node index.js
 ```
