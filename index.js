@@ -121,9 +121,19 @@ app.get('/collection/:collection_name', async function (req, res) {
 // For any URL (apart the above ones), redirect to the vuejs application.
 // This is needed because the vuejs app is _single page_, but it changes the
 // URL (e.g adding /searchinterface) when the tab changes.
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'assets', 'vuejs', 'index.html'));
+
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'assets', 'vuejs', 'index.html'));
+// });
+
+// This is to only redirect for the right URLs.
+const urls = ['/plus', '/references', '/collections', '/searchinterface'];
+urls.forEach( (url) => {
+    app.get(url, (req, res) => {
+        res.sendFile(path.join(__dirname, 'assets', 'vuejs', 'index.html'));
+    });
 });
+
 
 //============================= Endpoints (post) =============================//
 /**
