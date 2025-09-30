@@ -1,6 +1,8 @@
 # TODO
 
 ## General
+- Update code structure in README
+
 - update change log
 - remove useless annotation in preview
 
@@ -16,3 +18,8 @@
 - filter by scale
 - lock notes so matching is only exact for them
 - polyphonic queries
+
+
+## Docker
+- Move Verovio + data generation to a separate "data-builder" image.
+- Put installation and building of client in CI/CD.
