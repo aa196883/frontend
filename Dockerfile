@@ -10,6 +10,9 @@ COPY . .
 # Install server-side dependencies
 RUN npm install
 
+#------Install and build the client
+RUN ./install_client.sh
+
 # Expose the frontend port
 EXPOSE 3000
 

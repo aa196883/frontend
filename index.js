@@ -20,7 +20,6 @@ const port = 3000;
 
 require('dotenv').config()
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000';
-const BASE_PATH = process.env.BASE_PATH || '';
 
 // Configuration de Multer pour stocker temporairement les fichiers audio dans le dossier 'uploads'
 const storage = multer.diskStorage({
