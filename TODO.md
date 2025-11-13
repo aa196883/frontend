@@ -1,24 +1,25 @@
 # TODO
 
+## General
+- Update code structure in README
+
+- update change log
+- remove useless annotation in preview
+
+- Move config folder to the main repository
+
+- Remove the allow all CORS in index.js for production (find an easy way to switch allow for dev and disallow for prod) ;
+
 ## Bugs
-- Some files do not play in the result page.
-Error message: `let base64midi = tk.renderToMIDI();`: `number too large to convert to VLV` (in `playMIDIHandler`)
-Affected files:
-    - `Air_n_12.mei` ;
-    - `Air_n_12_complexe.mei` ;
-    - `Air_n_13.mei` ;
-    - `Air_n_13b_g.mei` ;
-    - `Air_n_50.mei` ;
-List is not exhaustive.
-All the files have in common the pedal symbol.
+- svg are generated for each result and so process can break when viewing individual result on result page ;
+- cle du caveau -> highlight matching broken ;
 
-## Frontend
-- Result page: svg generated with verovio: comment overlap title (in the svg) ;
+## New features
+- filter by scale
+- lock notes so matching is only exact for them
+- polyphonic queries
 
-- Verovio: tempo (above key signature) is not displayed correctly (some sort of rectangle instead of a note) ;
-Other font were tried, but none changed anything.
 
-- Update the frontpage (there is no information on Albert-Poulain database) ;
-
-## Optimisation
-- Alpha parameter has no optimisation for the moment (get all the results from the query, then sort them, and after remove the ones that have a score too low (done in the python backend)) ;
+## Docker
+- Move Verovio + data generation to a separate "data-builder" image.
+- Put installation and building of client in CI/CD.

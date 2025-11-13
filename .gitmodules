@@ -1,4 +1,0 @@
-[submodule "compilation_requete_fuzzy"]
-	path = compilation_requete_fuzzy
-	url = git@github.com:aa196883/compilation_requete_fuzzy.git
-	branch = perf_testing
