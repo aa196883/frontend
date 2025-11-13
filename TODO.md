@@ -10,9 +10,13 @@
 
 - Remove the allow all CORS in index.js for production (find an easy way to switch allow for dev and disallow for prod) ;
 
+- Add Alexandre to the truc tu sais ;
+
 ## Bugs
+- All notes are removed from staff whe pressing delete key
 - svg are generated for each result and so process can break when viewing individual result on result page ;
 - cle du caveau -> highlight matching broken ;
+- key noises on keyboard don't work online version ;
 
 ## New features
 - filter by scale
