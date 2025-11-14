@@ -1,11 +1,49 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+function log_section() {
+    echo "==========================="
+    echo "$1"
+    echo "==========================="
+}
+
+function require_command() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "Missing required command: $1" >&2
+        return 1
+    fi
+    return 0
+}
+
+function verify_preconditions() {
+    local missing=0
+
+    if [[ ! -d "assets" ]]; then
+        echo "Expected assets directory to exist in $(pwd)" >&2
+        missing=1
+    fi
+
+    require_command git || missing=1
+    require_command python3 || missing=1
+    require_command make || missing=1
+
+    return $missing
+}
+
+if [[ "${1:-}" == "--verify" ]]; then
+    if verify_preconditions; then
+        echo "install_data.sh: preconditions satisfied."
+        exit 0
+    fi
+    exit 1
+fi
+
+verify_preconditions
 
 # This script will download the data from the gitlab repository, put the files in the right folder, and generate the other formats.
 
 #---Get the repo
-echo "==========================="
-echo "Getting the data repository"
-echo "==========================="
+log_section "Getting the data repository"
 
 cd assets/
 
