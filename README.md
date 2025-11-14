@@ -31,7 +31,14 @@ The **client** (vueJS implementation of the interface) is maintained in a separa
 ├── config/                   # Neo4j configuration (legacy)
 ├── views/                    # HTML files
 │
-├── index.js                  # Main entry point (Node.js server)
+├── index.js                  # Entry point that boots the Express app
+├── src/
+│   └── server/
+│       ├── config.js         # Environment-driven configuration
+│       ├── index.js          # createApp factory that wires the server together
+│       ├── logger.js         # Timestamped logging with log-level filtering
+│       ├── middleware.js     # Shared middleware and centralised error handling
+│       └── router.js         # API routes and static asset delivery
 ├── jsdoc.json                # JSDoc config
 ├── package.json              # npm dependencies
 ├── loadAllDB.sh              # Load data into Neo4j
@@ -133,7 +140,17 @@ This frontend communicates with the backend via REST API calls. The backend must
 
 By default, the frontend expects the backend to be available at `http://localhost:5000`.
 
-> Endpoint URLs and port can be configured in `index.js`
+> Endpoint URLs, port, logging level, and CORS behaviour are now configured through environment variables in `src/server/config.js`.
+
+### 🔧 Configuration overview
+
+The server reads configuration from the environment (see `.env`):
+
+- `API_BASE_URL`: URL of the Python backend (default: `http://localhost:5000`).
+- `PORT`: Port exposed by the Node.js server (default: `3000`).
+- `NODE_ENV`: Controls production behaviour. When set to `production`, CORS is disabled and logging defaults to `warn`.
+- `ENABLE_CORS`: Force-enable CORS in production if required (`true` / `false`).
+- `LOG_LEVEL`: One of `error`, `warn`, `info`, or `debug` to fine-tune console output.
 
 ---
 
@@ -147,7 +164,7 @@ Open `docs/index.html` in your browser.
 ---
 
 ## 💡 Development Notes
-- If you edit `index.js`, restart the server to apply changes (or use `nodemon`).
+- If you edit files in `src/server`, restart the server to apply changes (or use `nodemon`).
 
 For database setup and ingestion scripts, see the backend project.
 
