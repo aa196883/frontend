@@ -19,6 +19,7 @@ describe('SKRID proxy routes', () => {
     let backendServer;
     let supertestClient;
     let tempDir;
+    let lastSearchRequest;
 
     before(async () => {
         const backendApp = express();
@@ -41,8 +42,10 @@ describe('SKRID proxy routes', () => {
         });
 
         backendApp.post('/search-results', (req, res) => {
-            if (!req.body || typeof req.body.query !== 'string') {
-                res.status(422).json({ error: 'Query is required' });
+            lastSearchRequest = req.body;
+
+            if (!req.body || (typeof req.body.query !== 'string' && !req.body.notes)) {
+                res.status(422).json({ error: 'Query or notes are required' });
                 return;
             }
 
@@ -114,7 +117,65 @@ describe('SKRID proxy routes', () => {
 
     it('propagates backend search validation errors', async () => {
         const response = await supertestClient.post('/search-results').send({}).expectStatus(422);
-        assert.equal(response.body.error, 'Query is required');
+        assert.equal(response.body.error, 'Query or notes are required');
+    });
+
+    it('normalises polyphonic voice payloads before proxying to the backend', async () => {
+        const polyphonicRequest = {
+            voices: [
+                {
+                    notes: "[(['c/4'], 4, 0)]",
+                    pitch_distance: '0.5',
+                    duration_factor: '1.25',
+                    duration_gap: 0,
+                    allow_transposition: 'true',
+                    allow_homothety: false,
+                    mode: 'ionian',
+                },
+                {
+                    notes: [['d/4'], 8, 0],
+                    allow_transposition: 0,
+                    allow_homothety: 1,
+                },
+            ],
+            shared: {
+                alpha: '0.35',
+                incipit_only: 'false',
+                collection: 'bach',
+            },
+        };
+
+        await supertestClient.post('/search-results').send(polyphonicRequest).expectStatus(200);
+
+        assert.deepEqual(lastSearchRequest, {
+            notes: ["[(['c/4'], 4, 0)]", '[["d/4"],8,0]'],
+            pitch_distance: [0.5, 0],
+            duration_factor: [1.25, 1],
+            duration_gap: [0, 0],
+            allow_transposition: [true, false],
+            allow_homothety: [false, true],
+            mode: ['ionian', ''],
+            alpha: 0.35,
+            incipit_only: false,
+            collection: 'bach',
+        });
+    });
+
+    it('rejects polyphonic payloads with more than four voices', async () => {
+        const response = await supertestClient
+            .post('/search-results')
+            .send({
+                voices: [
+                    { notes: 'voice-1' },
+                    { notes: 'voice-2' },
+                    { notes: 'voice-3' },
+                    { notes: 'voice-4' },
+                    { notes: 'voice-5' },
+                ],
+            })
+            .expectStatus(422);
+
+        assert.equal(response.body.error, 'A maximum of 4 voices is supported.');
     });
 
     it('converts uploaded recordings via the backend', async () => {
