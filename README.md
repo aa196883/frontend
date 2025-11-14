@@ -166,6 +166,46 @@ npm test
 
 In CI, run the same command after installing dependencies. The suite spins up a mock backend, so no external services are required.
 
+### 🎶 Polyphonic search payloads
+
+The Vue.js client (maintained in [`skrid/client`](https://gitlab.inria.fr/skrid/client)) can now submit polyphonic search queries through
+the `/search-results` endpoint. Instead of sending the backend payload directly, the frontend may post a high-level structure that groups
+voice-specific parameters under a `voices` array:
+
+```json
+{
+  "voices": [
+    {
+      "notes": "[(['c/4'], 4, 0)]",
+      "pitch_distance": 0.5,
+      "duration_factor": 1.25,
+      "duration_gap": 0,
+      "allow_transposition": true,
+      "allow_homothety": false,
+      "mode": "ionian"
+    },
+    {
+      "notes": "[(['e/4'], 4, 0)]",
+      "allow_transposition": false,
+      "allow_homothety": true
+    }
+  ],
+  "shared": {
+    "alpha": 0.35,
+    "incipit_only": false,
+    "collection": "bach"
+  }
+}
+```
+
+The Node.js proxy validates the request, enforces the maximum of four voices, fills in parameter defaults, and converts the payload to the
+format expected by the Flask backend (parallel arrays for each per-voice parameter, plus the shared options). Existing single-voice queries
+continue to work because requests that already contain backend-compatible fields (`notes`, `pitch_distance`, etc.) are forwarded unchanged.
+
+👉 **Client update tip:** when adapting the Vue.js UI, freeze the controls that apply globally (`alpha`, `incipit_only`, `collection`) after
+creating the first staff, but keep the per-staff controls editable so that each voice can supply its own values. Once the user clicks
+“Ajouter une portée”, append the frozen voice to the `voices` array, reset the editable controls, and prevent adding more than four voices.
+
 ---
 
 ## 🐞 Backend Dependency

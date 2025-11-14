@@ -7,6 +7,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { apiBaseUrl } = require('./config');
 const { log } = require('./logger');
+const { transformSearchPayload } = require('./searchPayload');
 
 const router = express.Router();
 
@@ -89,10 +90,11 @@ vueRoutes.forEach((url) => {
 
 router.post('/search-results', async (req, res, next) => {
     try {
+        const payload = transformSearchPayload(req.body);
         const response = await fetch(`${apiBaseUrl}/search-results`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(req.body),
+            body: JSON.stringify(payload),
         });
 
         const data = await parseJsonResponse(response);
