@@ -4,6 +4,7 @@ venv/
 docs/
 
 assets/*
+!assets/README.md
 
 package-lock.json
 

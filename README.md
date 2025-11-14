@@ -22,28 +22,32 @@ The **client** (vueJS implementation of the interface) is maintained in a separa
 ```text
 .
 ├── assets/
-│   ├── acoustic_grand_piano/ # Sounds for piano keys
-│   ├── data/                 # Musical data used by the app
-│   ├── public/               # Images and static assets
-│   ├── scripts/              # Client-side JS
-│   └── styles/               # CSS files
-├── docs/                     # Documentation (when generated)
-├── config/                   # Neo4j configuration (legacy)
-├── views/                    # HTML files
-│
-├── index.js                  # Entry point that boots the Express app
+│   ├── README.md           # Overview of generated asset folders
+│   ├── client/             # (generated) Vue client Git clone (install_client.sh)
+│   ├── data/               # (generated) Musical dataset repository (install_data.sh)
+│   └── vuejs/              # (generated) Built client bundle served by Express
+├── CHANGELOG.md
+├── Dockerfile
+├── index.js                # Entry point that boots the Express app
+├── install_client.sh       # Fetches and builds the Vue client bundle
+├── install_data.sh         # Fetches the musical dataset and derived assets
+├── jsdoc.json              # JSDoc config
+├── LICENSE.md
+├── package.json            # npm dependencies
+├── README.md
 ├── src/
 │   └── server/
-│       ├── config.js         # Environment-driven configuration
-│       ├── index.js          # createApp factory that wires the server together
-│       ├── logger.js         # Timestamped logging with log-level filtering
-│       ├── middleware.js     # Shared middleware and centralised error handling
-│       └── router.js         # API routes and static asset delivery
-├── jsdoc.json                # JSDoc config
-├── package.json              # npm dependencies
-├── loadAllDB.sh              # Load data into Neo4j
-├── README.md
-└── TODO.md
+│       ├── config.js       # Environment-driven configuration
+│       ├── index.js        # createApp factory that wires the server together
+│       ├── logger.js       # Timestamped logging with log-level filtering
+│       ├── middleware.js   # Shared middleware and centralised error handling
+│       └── router.js       # API routes and static asset delivery
+├── tests/
+│   ├── helpers/            # Shared test utilities
+│   ├── installers/         # Installer script smoke tests
+│   └── integration/        # Express integration tests
+├── TODO.md
+└── uploads/                # Temporary storage for uploaded audio files
 ```
 
 ---
@@ -68,23 +72,37 @@ Copy the example `.env` file and adjust the values:
 cp .env.example .env
 ```
 
-### 4. Install the data
+### 4. Authenticate with GitLab
+The asset installers clone private repositories from `gitlab.inria.fr`:
+
+- [`skrid/data`](https://gitlab.inria.fr/skrid/data) (musical collections)
+- [`skrid/client`](https://gitlab.inria.fr/skrid/client) (Vue.js frontend)
+
+Make sure your Git configuration can authenticate against GitLab before running the scripts:
+
+1. Request access to the projects (membership is required).
+2. Create a personal access token with the **`read_repository`** scope.
+3. Configure your environment so `git` can use those credentials (e.g. `git config credential.helper store`, or set `GIT_ASKPASS` / `GIT_TERMINAL_PROMPT=1`).
+
+Without credentials (or if outbound network access is blocked) the clone step fails with HTTP 403 and the asset folders remain empty. In CI you can provide credentials through environment variables or a deploy key.
+
+### 5. Install the data
 To get the MEI files needed to display the previews, run the script `install_data.sh`:
 ```bash
 ./install_data.sh
 ```
 
-Then you can generate the other formats (see the data's README).
+The script populates `assets/data/` by cloning the GitLab repository and running its `Makefile`. Use `./install_data.sh --verify` to confirm the required tooling (`git`, `python3`, `make`) is available before cloning.
 
-### 5. Install the vueJS client
+### 6. Install the vueJS client
 Run the script `install_client.sh`:
 ```bash
 ./install_client.sh
 ```
 
-This will clone the `client` repository, build it, and place the files to the right place.
+This clones `assets/client/`, builds the Vue.js application, and copies the compiled bundle into `assets/vuejs/`. The directory is cleared on every run so the generated files always match the latest build.
 
-### 6. Start the frontend API server
+### 7. Start the frontend API server
 ```bash
 node index.js
 ```
@@ -113,15 +131,18 @@ Copy the example `.env` file and adjust the values:
 cp .env.example .env
 ```
 
-### 4. Install the data
+### 4. Authenticate with GitLab
+Access to the private `skrid/data` and `skrid/client` repositories is still required in development. Follow the steps in the production section to ensure `git` can read from GitLab before continuing.
+
+### 5. Install the data
 To get the MEI files needed to display the previews, run the script `install_data.sh`:
 ```bash
 ./install_data.sh
 ```
 
-Then you can generate the other formats (see the data's README).
+The script creates `assets/data/` and generates the derived formats by running the repository's `Makefile`.
 
-### 5. Start the frontend API server
+### 6. Start the frontend API server
 ```bash
 node index.js
 ```
@@ -131,7 +152,7 @@ Or, for development (auto-restart on edit):
 npm run nodemon
 ```
 
-To see the website, launch the [vueJS client](https://gitlab.inria.fr/skrid/client)
+To see the website, launch the [vueJS client](https://gitlab.inria.fr/skrid/client) (after cloning/building it through `install_client.sh`).
 
 ### ✅ Testing
 
