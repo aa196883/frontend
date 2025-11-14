@@ -78,13 +78,19 @@ The asset installers clone private repositories from `gitlab.inria.fr`:
 - [`skrid/data`](https://gitlab.inria.fr/skrid/data) (musical collections)
 - [`skrid/client`](https://gitlab.inria.fr/skrid/client) (Vue.js frontend)
 
+> ℹ️ **Required permissions:** access to both projects plus the `read_repository` scope on your personal access token (PAT) or deploy key.
+
 Make sure your Git configuration can authenticate against GitLab before running the scripts:
 
 1. Request access to the projects (membership is required).
-2. Create a personal access token with the **`read_repository`** scope.
-3. Configure your environment so `git` can use those credentials (e.g. `git config credential.helper store`, or set `GIT_ASKPASS` / `GIT_TERMINAL_PROMPT=1`).
+2. Create a personal access token with the **`read_repository`** scope (or generate a CI job token with the same scope).
+3. Export the credentials so non-interactive installs can use them. Common options:
+   - Personal PAT: `export GITLAB_USERNAME=<user>` and `export GITLAB_TOKEN=<token>` (then use a credential helper such as [`git-credential-env`](https://git-scm.com/docs/gitcredentials#_custom_helpers)).
+   - Deploy key: configure `~/.ssh/config` to point to the appropriate private key.
+   - CI variables: set `CI_JOB_TOKEN` or `GITLAB_ACCESS_TOKEN` and rely on `git config credential.helper store` (or `cache`).
+4. Ensure `git` is installed on the machine executing the installers. If `git` is unavailable, pre-populate `assets/client` and/or `assets/data` and rerun the scripts with `--skip-fetch`.
 
-Without credentials (or if outbound network access is blocked) the clone step fails with HTTP 403 and the asset folders remain empty. In CI you can provide credentials through environment variables or a deploy key.
+Without credentials (or if outbound network access is blocked) the clone step fails with HTTP 403 and the asset folders remain empty. In CI you can provide credentials through environment variables, a deploy key, or by supplying pre-built artefacts (see below).
 
 ### 5. Install the data
 To get the MEI files needed to display the previews, run the script `install_data.sh`:
@@ -92,7 +98,18 @@ To get the MEI files needed to display the previews, run the script `install_dat
 ./install_data.sh
 ```
 
-The script populates `assets/data/` by cloning the GitLab repository and running its `Makefile`. Use `./install_data.sh --verify` to confirm the required tooling (`git`, `python3`, `make`) is available before cloning.
+The script populates `assets/data/` by cloning the GitLab repository and running its `Makefile`. Use `./install_data.sh --verify` to confirm the required tooling (`git`, `python3`, `make`) is available before cloning. Advanced flags:
+
+```bash
+./install_data.sh --help
+```
+
+- `--skip-fetch` – assume the repository already exists locally.
+- `--skip-venv` – reuse the currently active Python environment.
+- `--skip-make` – skip the `make` step when the generated artefacts are already present.
+- `--data-dir PATH` / `--branch NAME` – customise the checkout location.
+
+The script falls back to existing checkouts when `git` is unavailable, allowing offline environments to reuse cached data.
 
 ### 6. Install the vueJS client
 Run the script `install_client.sh`:
@@ -100,7 +117,19 @@ Run the script `install_client.sh`:
 ./install_client.sh
 ```
 
-This clones `assets/client/`, builds the Vue.js application, and copies the compiled bundle into `assets/vuejs/`. The directory is cleared on every run so the generated files always match the latest build.
+This clones `assets/client/`, builds the Vue.js application, and copies the compiled bundle into `assets/vuejs/`. The directory is cleared on every run so the generated files always match the latest build. Advanced usage:
+
+```bash
+./install_client.sh --help
+```
+
+- `--skip-fetch` / `--skip-install` / `--skip-build` – reuse a local clone or pre-built artefacts.
+- `--prebuilt-dir PATH` – copy an existing build directory into `assets/vuejs/`.
+- `--prebuilt-archive FILE` – unpack an archive containing the built assets.
+- `CLIENT_DIST_DIR` / `CLIENT_DIST_ARCHIVE` – environment equivalents of the prebuilt flags (useful in Docker builds).
+- `--output-dir PATH` – change the output directory (defaults to `assets/vuejs`).
+
+When `git` is not available, the script automatically falls back to any existing checkout in `assets/client/`. Provide pre-built assets to keep the workflow functional in fully offline environments.
 
 ### 7. Start the frontend API server
 ```bash
@@ -132,7 +161,7 @@ cp .env.example .env
 ```
 
 ### 4. Authenticate with GitLab
-Access to the private `skrid/data` and `skrid/client` repositories is still required in development. Follow the steps in the production section to ensure `git` can read from GitLab before continuing.
+Access to the private `skrid/data` and `skrid/client` repositories is still required in development. Follow the steps in the production section to ensure `git` can read from GitLab before continuing, or download the repositories manually and use `--skip-fetch`.
 
 ### 5. Install the data
 To get the MEI files needed to display the previews, run the script `install_data.sh`:
@@ -152,7 +181,7 @@ Or, for development (auto-restart on edit):
 npm run nodemon
 ```
 
-To see the website, launch the [vueJS client](https://gitlab.inria.fr/skrid/client) (after cloning/building it through `install_client.sh`).
+To see the website, launch the [vueJS client](https://gitlab.inria.fr/skrid/client) (after cloning/building it through `install_client.sh`). Use the `--skip-build` and `--prebuilt-dir` flags to reuse builds generated by the Vue workspace.
 
 ### ✅ Testing
 
@@ -165,6 +194,35 @@ npm test
 ```
 
 In CI, run the same command after installing dependencies. The suite spins up a mock backend, so no external services are required.
+
+---
+
+## 🐳 Docker build tips
+
+The Dockerfile uses multi-stage builds so the heavy steps are cached independently:
+
+- Stage `server-deps` copies only `package*.json` before running `npm install`, so dependency downloads are reused until the manifests change.
+- Stage `client-build` runs `install_client.sh`, which now accepts pre-built bundles via `CLIENT_DIST_DIR` or `CLIENT_DIST_ARCHIVE`. Provide these build arguments to skip cloning from GitLab (ideal for CI environments without GitLab access).
+- The runtime image reuses the cached `node_modules` folder and copies the `assets/vuejs/` artefacts produced in the previous stage.
+
+Example builds:
+
+```bash
+# Standard build – clones the GitLab client repository during the Docker build
+docker build -t skrid-frontend .
+
+# Use a pre-built bundle located at assets/prebuilt-client/
+docker build \
+  --build-arg CLIENT_DIST_DIR=assets/prebuilt-client \
+  -t skrid-frontend:prebuilt .
+
+# Use a tarball (copied into the build context) instead of cloning
+docker build \
+  --build-arg CLIENT_DIST_ARCHIVE=assets/client-build.tar.gz \
+  -t skrid-frontend:tarball .
+```
+
+The install scripts honour `--skip-fetch`, so even when the Docker build provides pre-built assets you can rerun them locally without re-downloading the private GitLab repositories.
 
 ---
 
