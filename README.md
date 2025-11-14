@@ -133,6 +133,18 @@ npm run nodemon
 
 To see the website, launch the [vueJS client](https://gitlab.inria.fr/skrid/client)
 
+### ✅ Testing
+
+The project uses Node's built-in test runner with an Express harness to exercise the proxy routes and smoke-test the installer scripts.
+
+Run the full suite locally:
+
+```bash
+npm test
+```
+
+In CI, run the same command after installing dependencies. The suite spins up a mock backend, so no external services are required.
+
 ---
 
 ## 🐞 Backend Dependency
