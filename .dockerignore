@@ -2,7 +2,6 @@
 .gitignore
 node_modules
 npm-debug.log*
-assets/client
 assets/data
 uploads
 logs
