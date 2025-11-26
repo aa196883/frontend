@@ -22,21 +22,32 @@ The **client** (vueJS implementation of the interface) is maintained in a separa
 ```text
 .
 ├── assets/
-│   ├── acoustic_grand_piano/ # Sounds for piano keys
-│   ├── data/                 # Musical data used by the app
-│   ├── public/               # Images and static assets
-│   ├── scripts/              # Client-side JS
-│   └── styles/               # CSS files
-├── docs/                     # Documentation (when generated)
-├── config/                   # Neo4j configuration (legacy)
-├── views/                    # HTML files
-│
-├── index.js                  # Main entry point (Node.js server)
-├── jsdoc.json                # JSDoc config
-├── package.json              # npm dependencies
-├── loadAllDB.sh              # Load data into Neo4j
+│   ├── README.md           # Overview of generated asset folders
+│   ├── client/             # (generated) Vue client Git clone (install_client.sh)
+│   ├── data/               # (generated) Musical dataset repository (install_data.sh)
+│   └── vuejs/              # (generated) Built client bundle served by Express
+├── CHANGELOG.md
+├── Dockerfile
+├── index.js                # Entry point that boots the Express app
+├── install_client.sh       # Fetches and builds the Vue client bundle
+├── install_data.sh         # Fetches the musical dataset and derived assets
+├── jsdoc.json              # JSDoc config
+├── LICENSE.md
+├── package.json            # npm dependencies
 ├── README.md
-└── TODO.md
+├── src/
+│   └── server/
+│       ├── config.js       # Environment-driven configuration
+│       ├── index.js        # createApp factory that wires the server together
+│       ├── logger.js       # Timestamped logging with log-level filtering
+│       ├── middleware.js   # Shared middleware and centralised error handling
+│       └── router.js       # API routes and static asset delivery
+├── tests/
+│   ├── helpers/            # Shared test utilities
+│   ├── installers/         # Installer script smoke tests
+│   └── integration/        # Express integration tests
+├── TODO.md
+└── uploads/                # Temporary storage for uploaded audio files
 ```
 
 ---
@@ -61,23 +72,66 @@ Copy the example `.env` file and adjust the values:
 cp .env.example .env
 ```
 
-### 4. Install the data
+### 4. Authenticate with GitLab
+The asset installers clone private repositories from `gitlab.inria.fr`:
+
+- [`skrid/data`](https://gitlab.inria.fr/skrid/data) (musical collections)
+- [`skrid/client`](https://gitlab.inria.fr/skrid/client) (Vue.js frontend)
+
+> ℹ️ **Required permissions:** access to both projects plus the `read_repository` scope on your personal access token (PAT) or deploy key.
+
+Make sure your Git configuration can authenticate against GitLab before running the scripts:
+
+1. Request access to the projects (membership is required).
+2. Create a personal access token with the **`read_repository`** scope (or generate a CI job token with the same scope).
+3. Export the credentials so non-interactive installs can use them. Common options:
+   - Personal PAT: `export GITLAB_USERNAME=<user>` and `export GITLAB_TOKEN=<token>` (then use a credential helper such as [`git-credential-env`](https://git-scm.com/docs/gitcredentials#_custom_helpers)).
+   - Deploy key: configure `~/.ssh/config` to point to the appropriate private key.
+   - CI variables: set `CI_JOB_TOKEN` or `GITLAB_ACCESS_TOKEN` and rely on `git config credential.helper store` (or `cache`).
+4. Ensure `git` is installed on the machine executing the installers. If `git` is unavailable, pre-populate `assets/client` and/or `assets/data` and rerun the scripts with `--skip-fetch`.
+
+Without credentials (or if outbound network access is blocked) the clone step fails with HTTP 403 and the asset folders remain empty. In CI you can provide credentials through environment variables, a deploy key, or by supplying pre-built artefacts (see below).
+
+### 5. Install the data
 To get the MEI files needed to display the previews, run the script `install_data.sh`:
 ```bash
 ./install_data.sh
 ```
 
-Then you can generate the other formats (see the data's README).
+The script populates `assets/data/` by cloning the GitLab repository and running its `Makefile`. Use `./install_data.sh --verify` to confirm the required tooling (`git`, `python3`, `make`) is available before cloning. Advanced flags:
 
-### 5. Install the vueJS client
+```bash
+./install_data.sh --help
+```
+
+- `--skip-fetch` – assume the repository already exists locally.
+- `--skip-venv` – reuse the currently active Python environment.
+- `--skip-make` – skip the `make` step when the generated artefacts are already present.
+- `--data-dir PATH` / `--branch NAME` – customise the checkout location.
+
+The script falls back to existing checkouts when `git` is unavailable, allowing offline environments to reuse cached data.
+
+### 6. Install the vueJS client
 Run the script `install_client.sh`:
 ```bash
 ./install_client.sh
 ```
 
-This will clone the `client` repository, build it, and place the files to the right place.
+This clones `assets/client/`, builds the Vue.js application, and copies the compiled bundle into `assets/vuejs/`. The directory is cleared on every run so the generated files always match the latest build. Advanced usage:
 
-### 6. Start the frontend API server
+```bash
+./install_client.sh --help
+```
+
+- `--skip-fetch` / `--skip-install` / `--skip-build` – reuse a local clone or pre-built artefacts.
+- `--prebuilt-dir PATH` – copy an existing build directory into `assets/vuejs/`.
+- `--prebuilt-archive FILE` – unpack an archive containing the built assets.
+- `CLIENT_DIST_DIR` / `CLIENT_DIST_ARCHIVE` – environment equivalents of the prebuilt flags (useful in Docker builds).
+- `--output-dir PATH` – change the output directory (defaults to `assets/vuejs`).
+
+When `git` is not available, the script automatically falls back to any existing checkout in `assets/client/`. Provide pre-built assets to keep the workflow functional in fully offline environments.
+
+### 7. Start the frontend API server
 ```bash
 node index.js
 ```
@@ -106,15 +160,18 @@ Copy the example `.env` file and adjust the values:
 cp .env.example .env
 ```
 
-### 4. Install the data
+### 4. Authenticate with GitLab
+Access to the private `skrid/data` and `skrid/client` repositories is still required in development. Follow the steps in the production section to ensure `git` can read from GitLab before continuing, or download the repositories manually and use `--skip-fetch`.
+
+### 5. Install the data
 To get the MEI files needed to display the previews, run the script `install_data.sh`:
 ```bash
 ./install_data.sh
 ```
 
-Then you can generate the other formats (see the data's README).
+The script creates `assets/data/` and generates the derived formats by running the repository's `Makefile`.
 
-### 5. Start the frontend API server
+### 6. Start the frontend API server
 ```bash
 node index.js
 ```
@@ -124,7 +181,48 @@ Or, for development (auto-restart on edit):
 npm run nodemon
 ```
 
-To see the website, launch the [vueJS client](https://gitlab.inria.fr/skrid/client)
+To see the website, launch the [vueJS client](https://gitlab.inria.fr/skrid/client) (after cloning/building it through `install_client.sh`). Use the `--skip-build` and `--prebuilt-dir` flags to reuse builds generated by the Vue workspace.
+
+### ✅ Testing
+
+The project uses Node's built-in test runner with an Express harness to exercise the proxy routes and smoke-test the installer scripts.
+
+Run the full suite locally:
+
+```bash
+npm test
+```
+
+In CI, run the same command after installing dependencies. The suite spins up a mock backend, so no external services are required.
+
+---
+
+## 🐳 Docker build tips
+
+The Dockerfile uses multi-stage builds so the heavy steps are cached independently:
+
+- Stage `server-deps` copies only `package*.json` before running `npm install`, so dependency downloads are reused until the manifests change.
+- Stage `client-build` runs `install_client.sh`, which now accepts pre-built bundles via `CLIENT_DIST_DIR` or `CLIENT_DIST_ARCHIVE`. Provide these build arguments to skip cloning from GitLab (ideal for CI environments without GitLab access).
+- The runtime image reuses the cached `node_modules` folder and copies the `assets/vuejs/` artefacts produced in the previous stage.
+
+Example builds:
+
+```bash
+# Standard build – clones the GitLab client repository during the Docker build
+docker build -t skrid-frontend .
+
+# Use a pre-built bundle located at assets/prebuilt-client/
+docker build \
+  --build-arg CLIENT_DIST_DIR=assets/prebuilt-client \
+  -t skrid-frontend:prebuilt .
+
+# Use a tarball (copied into the build context) instead of cloning
+docker build \
+  --build-arg CLIENT_DIST_ARCHIVE=assets/client-build.tar.gz \
+  -t skrid-frontend:tarball .
+```
+
+The install scripts honour `--skip-fetch`, so even when the Docker build provides pre-built assets you can rerun them locally without re-downloading the private GitLab repositories.
 
 ---
 
@@ -133,7 +231,17 @@ This frontend communicates with the backend via REST API calls. The backend must
 
 By default, the frontend expects the backend to be available at `http://localhost:5000`.
 
-> Endpoint URLs and port can be configured in `index.js`
+> Endpoint URLs, port, logging level, and CORS behaviour are now configured through environment variables in `src/server/config.js`.
+
+### 🔧 Configuration overview
+
+The server reads configuration from the environment (see `.env`):
+
+- `API_BASE_URL`: URL of the Python backend (default: `http://localhost:5000`).
+- `PORT`: Port exposed by the Node.js server (default: `3000`).
+- `NODE_ENV`: Controls production behaviour. When set to `production`, CORS is disabled and logging defaults to `warn`.
+- `ENABLE_CORS`: Force-enable CORS in production if required (`true` / `false`).
+- `LOG_LEVEL`: One of `error`, `warn`, `info`, or `debug` to fine-tune console output.
 
 ---
 
@@ -147,7 +255,7 @@ Open `docs/index.html` in your browser.
 ---
 
 ## 💡 Development Notes
-- If you edit `index.js`, restart the server to apply changes (or use `nodemon`).
+- If you edit files in `src/server`, restart the server to apply changes (or use `nodemon`).
 
 For database setup and ingestion scripts, see the backend project.
 
