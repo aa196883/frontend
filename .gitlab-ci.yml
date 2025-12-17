@@ -32,6 +32,7 @@ before_script:
 # -----------------------
 install:
   stage: install
+  tags: ['linux']
   script:
     - npm install
     - cp .env.example .env
@@ -51,6 +52,7 @@ install:
 # -----------------------
 test:
   stage: test
+  tags: ['linux']
   needs: ["install"]
   script:
     - npm test
