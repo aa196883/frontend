@@ -9,7 +9,6 @@ stages:
   - docker
 
 variables:
-  SKIP_MAKE: "true"
   NODE_ENV: test
   PORT: "3000"
   API_BASE_URL: "http://localhost:5000"
@@ -40,7 +39,7 @@ install:
     - npm install
     - cp .env.example .env
     - chmod +x install_data.sh
-    - ./install_data.sh
+    - ./install_data.sh --skip-make
   artifacts:
     paths:
       - node_modules/
