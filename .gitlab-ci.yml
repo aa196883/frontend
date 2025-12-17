@@ -1,0 +1,78 @@
+# -----------------------
+# Default image for Node jobs
+# -----------------------
+image: node:20
+
+stages:
+  - install
+  - test
+  - docker
+
+variables:
+  NODE_ENV: test
+  PORT: "3000"
+  API_BASE_URL: "http://localhost:5000"
+  ENABLE_CORS: "true"
+  LOG_LEVEL: "info"
+
+  # Docker (only used in docker stage)
+  DOCKER_BUILDKIT: "1"
+
+cache:
+  key: node-${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+
+before_script:
+  - node --version
+  - npm --version
+
+# -----------------------
+# Install dependencies & data
+# -----------------------
+install:
+  stage: install
+  script:
+    - npm install
+    - cp .env.example .env
+    - chmod +x install_data.sh
+    - ./install_data.sh
+  artifacts:
+    paths:
+      - node_modules/
+      - assets/
+      - .env
+    expire_in: 24h
+  after_script:
+    - echo "Install stage completed"
+
+# -----------------------
+# Run tests
+# -----------------------
+test:
+  stage: test
+  needs: ["install"]
+  script:
+    - npm test
+  after_script:
+    - echo "Test stage completed"
+
+# -----------------------
+# Build Docker image
+# -----------------------
+docker-build:
+  stage: docker
+  image: docker:26
+  services:
+    - name: docker:26-dind
+      command: ["--mtu=1450"]
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  needs: ["install"]
+  script:
+    - docker version
+    - docker build -t skrid-frontend:${CI_COMMIT_SHA} .
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  after_script:
+    - echo "Docker build completed"
