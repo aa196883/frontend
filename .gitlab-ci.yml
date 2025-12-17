@@ -9,7 +9,7 @@ stages:
   - docker
 
 variables:
-  SKIP_MID_PDF: "true"
+  SKIP_MAKE: "true"
   NODE_ENV: test
   PORT: "3000"
   API_BASE_URL: "http://localhost:5000"
