@@ -42,6 +42,20 @@ function require_command() {
     return 0
 }
 
+function require_python_version() {
+    if ! python - <<'PY'
+import sys
+
+if sys.version_info < (3, 11):
+    raise SystemExit(1)
+PY
+    then
+        echo "Python 3.11 or newer is required." >&2
+        return 1
+    fi
+    return 0
+}
+
 function verify_preconditions() {
     local missing=0
 
@@ -62,7 +76,8 @@ function verify_preconditions() {
     fi
 
     if (( !SKIP_VENV )); then
-        require_command python3 || missing=1
+        require_command python || missing=1
+        require_python_version || missing=1
     fi
 
     if (( !SKIP_MAKE )); then
@@ -155,7 +170,7 @@ if (( SKIP_VENV )); then
     log_section "Skipping virtual environment setup"
 else
     log_section "Setting up virtual environment"
-    python3 -m venv venv
+    python -m venv venv
     # shellcheck disable=SC1091
     source venv/bin/activate
 fi
