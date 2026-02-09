@@ -17,6 +17,7 @@
 - svg are generated for each result and so process can break when viewing individual result on result page ;
 - cle du caveau -> highlight matching broken ;
 - key noises on keyboard don't work online version ;
+- update links to pdf and other formats in the UI ;
 
 ## New features
 - filter by scale
