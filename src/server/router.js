@@ -157,4 +157,18 @@ router.post('/convert-recording', upload.single('file'), async (req, res, next) 
     }
 });
 
+router.post('/score-stats', async (req, res, next) => {
+    try {
+        const response = await fetch(`${apiBaseUrl}/score-stats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        next(error);
+    }
+});
+ 
 module.exports = router;
