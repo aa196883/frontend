@@ -77,7 +77,7 @@ router.get('/collection/:collection_name', async (req, res, next) => {
     }
 });
 
-const vueRoutes = ['/plus', '/references', '/collections', '/searchinterface'];
+const vueRoutes = ['/plus', '/references', '/collections', '/searchinterface', '/contourInterface'];
 vueRoutes.forEach((url) => {
     router.get(url, (req, res, next) => {
         res.sendFile(path.join(vueAppPath, 'index.html'), (err) => {
